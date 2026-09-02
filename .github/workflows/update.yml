@@ -1,0 +1,68 @@
+name: Update Dashboard
+
+on:
+  schedule:
+    - cron: '0 7 * * *'    # 07:00 UTC = 10:00 IDT
+    - cron: '0 16 * * *'   # 16:00 UTC = 19:00 IDT
+  workflow_dispatch:        # allow manual trigger from GitHub UI
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run updater
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+        run: python update_dashboard.py
+
+      - name: Commit & push changes
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pu_dashboard.html state.json
+          git diff --staged --quiet && echo "No changes." || \
+            (git commit -m "chore: dashboard auto-update $(date -u +'%Y-%m-%d %H:%M UTC')" && git push)
+
+  deploy-pages:
+    needs: update
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main   # pick up the just-committed changes
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'   # serve the whole repo root
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

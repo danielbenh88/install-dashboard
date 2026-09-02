@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.uveye.hiperglobal-slack-weekly</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/python3.13</string>
+    <string>/Users/danielbenharosh/Documents/dev_Ops_practice/install_report/hiperglobal_reporter.py</string>
+  </array>
+
+  <!-- Run every Monday at 09:05 (after daily HTML update at 09:00) -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Weekday</key> <integer>1</integer>
+    <key>Hour</key>    <integer>9</integer>
+    <key>Minute</key>  <integer>5</integer>
+  </dict>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>JENKINS_URL</key>            <string>https://ci.cloud.uveye.xyz</string>
+    <key>JENKINS_USER</key>           <string>daniel.b@uveye.com</string>
+    <key>JENKINS_TOKEN_REPORT</key>   <string>FILL_IN</string>
+    <key>SLACK_TOKEN</key>            <string>FILL_IN</string>
+    <key>SLACK_CHANNEL</key>          <string>C0BCQPBSD4P</string>
+    <key>DASHBOARD_PATH</key>         <string>/Users/danielbenharosh/Documents/dev_Ops_practice/install_report/pu_dashboard.html</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>

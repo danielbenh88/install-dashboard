@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HiperGlobal PU Installation Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+:root{color-scheme:light;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;font-size:13px;}
+
+/* Header */
+.header{background:linear-gradient(135deg,#1F3864 0%,#2E75B6 100%);color:#fff;padding:16px 24px 12px;}
+.header h1{font-size:19px;font-weight:700;}
+.header .sub{font-size:11px;opacity:.7;margin-top:2px;}
+.hrow{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.badge{display:inline-block;background:rgba(255,255,255,.18);border-radius:10px;padding:2px 10px;font-size:10px;margin-left:6px;}
+.upd{font-size:13px;opacity:.85;font-weight:500;}
+
+/* Tabs */
+.tabs{display:flex;background:#162d54;gap:2px;padding:0 20px;}
+.tab-btn{padding:10px 18px;font-size:12px;font-weight:600;color:rgba(255,255,255,.6);border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;transition:.2s;}
+.tab-btn:hover{color:#fff;}
+.tab-btn.active{color:#fff;border-bottom-color:#5BA3E0;}
+
+/* Layout */
+.pane{display:none;padding:16px 20px;}
+.pane.active{display:block;}
+.panel{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:16px;}
+.panel-title{font-size:12px;font-weight:700;color:#1F3864;margin-bottom:12px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid #eee;padding-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.row2{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:16px;}
+
+/* Section divider */
+.sec-divider{display:flex;align-items:center;gap:10px;margin:20px 0 16px;color:#888;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+.sec-divider::before,.sec-divider::after{content:'';flex:1;height:1px;background:#ddd;}
+
+/* Current month hero */
+.hero{background:linear-gradient(135deg,#1F3864,#2E75B6);border-radius:12px;padding:20px 24px;margin-bottom:16px;color:#fff;}
+.hero-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.hero-month{font-size:22px;font-weight:700;}
+.hero-badge{background:rgba(255,255,255,.2);border-radius:10px;padding:3px 12px;font-size:11px;}
+.hero-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.hcard{background:rgba(255,255,255,.12);border-radius:10px;padding:12px 14px;border-top:3px solid rgba(255,255,255,.3);}
+.hcard-label{font-size:10px;opacity:.75;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+.hcard-value{font-size:26px;font-weight:700;line-height:1;}
+.hcard-delta{font-size:10px;margin-top:4px;}
+.delta-up{color:#90ee90;}
+.delta-dn{color:#ff9999;}
+.delta-nc{color:rgba(255,255,255,.6);}
+
+/* Trend panel */
+.trend-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px;}
+.tcard{border-radius:8px;padding:12px;background:#f8f9fc;border:1px solid #eee;}
+.tcard-month{font-size:10px;font-weight:700;color:#1F3864;margin-bottom:8px;text-transform:uppercase;}
+.tcard-rows{display:flex;flex-direction:column;gap:5px;}
+.tcard-row{display:flex;align-items:center;justify-content:space-between;font-size:11px;}
+.tcard-key{color:#666;}
+.tcard-val{font-weight:700;color:#1a1a2e;}
+.tcard-delta{font-size:10px;margin-left:4px;}
+.tup{color:#4a8a2a;} .tdn{color:#c00;} .tnc{color:#aaa;}
+.tcard.current{border-color:#2E75B6;background:#eef5ff;}
+.tcard.current .tcard-month{color:#2E75B6;}
+.spark-wrap{height:80px;position:relative;}
+
+/* Summary cards */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.card{background:#fff;border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.08);border-top:3px solid #ccc;}
+.card.blue{border-color:#2E75B6;} .card.green{border-color:#70AD47;} .card.yellow{border-color:#FFC000;} .card.red{border-color:#e00;}
+.card-label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.card-value{font-size:28px;font-weight:700;line-height:1;}
+.card-sub{font-size:10px;color:#aaa;margin-top:4px;}
+.card.blue .card-value{color:#1a5fa0;} .card.green .card-value{color:#4a8a2a;} .card.yellow .card-value{color:#9a6e00;} .card.red .card-value{color:#b00;}
+
+/* Tables */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{background:#1F3864;color:#fff;padding:8px 10px;text-align:center;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;user-select:none;}
+thead th:hover{background:#2a4f88;}
+thead th:first-child{text-align:left;border-radius:6px 0 0 0;}
+thead th:last-child{border-radius:0 6px 0 0;}
+tbody tr:nth-child(even){background:#f9f9fc;}
+tbody tr:hover{background:#eef4ff;}
+tbody td{padding:7px 10px;text-align:center;border-bottom:1px solid #f0f0f0;vertical-align:middle;}
+tbody td:first-child{text-align:left;}
+tfoot td{padding:8px 10px;text-align:center;font-weight:700;background:#eef0f5;border-top:2px solid #ccc;}
+tfoot td:first-child{text-align:left;}
+
+/* Pills */
+.pill{display:inline-block;border-radius:10px;padding:2px 9px;font-size:10px;font-weight:600;white-space:nowrap;}
+.pill-green{background:#e2efda;color:#375623;} .pill-yellow{background:#fff2cc;color:#7f6000;}
+.pill-orange{background:#fde9d9;color:#833c00;} .pill-red{background:#fce4d6;color:#843c0c;}
+.pill-blue{background:#dce6f1;color:#1F3864;} .pill-gray{background:#f0f0f0;color:#555;}
+.src-tag{font-size:9px;background:#f0f0f0;color:#888;border-radius:4px;padding:1px 5px;margin-left:4px;}
+.src-jenkins{background:#d6e4f7;color:#1a5fa0;}
+.partial-note{font-size:10px;color:#aaa;font-style:italic;}
+.rate-bar{display:flex;align-items:center;gap:6px;}
+.rate-fill{height:6px;border-radius:3px;background:#70AD47;flex-shrink:0;}
+.rate-text{font-size:10px;color:#555;min-width:36px;}
+
+/* Error section */
+.cur-month-errors{margin-bottom:16px;}
+.no-err-banner{background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:12px;font-size:13px;color:#2e7d32;font-weight:600;}
+.err-banner-icon{font-size:22px;}
+.error-cat-bar{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f0f0f0;}
+.error-cat-bar:last-child{border-bottom:none;}
+.ecb-name{width:215px;font-size:12px;font-weight:600;flex-shrink:0;}
+.ecb-bar-wrap{flex:1;height:11px;background:#f0f0f0;border-radius:6px;overflow:hidden;}
+.ecb-bar-fill{height:100%;border-radius:6px;}
+.ecb-count{width:26px;text-align:right;font-size:12px;font-weight:700;}
+.ecb-type{font-size:10px;width:90px;}
+.type-post{color:#9a6e00;} .type-real{color:#b00;}
+.insight{background:#f0f7ff;border-left:4px solid #2E75B6;border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:16px;font-size:12px;line-height:1.7;}
+.insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.icard{background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.icard.ok{border-left:4px solid #70AD47;} .icard.warn{border-left:4px solid #FFC000;}
+.icard-title{font-size:11px;font-weight:700;margin-bottom:6px;}
+.icard.ok .icard-title{color:#375623;} .icard.warn .icard-title{color:#9a6e00;}
+.icard-desc{font-size:11px;color:#555;line-height:1.65;}
+
+/* Filters */
+.filters{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+.fsel{border:1px solid #ddd;border-radius:6px;padding:5px 10px;font-size:11px;outline:none;background:#fff;}
+.fsel:focus{border-color:#2E75B6;}
+.fchk{display:flex;align-items:center;gap:5px;font-size:11px;color:#555;cursor:pointer;}
+.row-count{margin-left:auto;font-size:11px;color:#888;}
+
+/* Site table run chain */
+.run-chain{font-size:11px;color:#555;}
+.rs{color:#4a8a2a;font-weight:600;} .rf{color:#c00;font-weight:600;} .ra{color:#9a6e00;font-weight:600;}
+.no-data{text-align:center;color:#aaa;padding:20px;font-style:italic;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hrow">
+    <div>
+      <h1>PU Installation Dashboard <span class="badge">HiperGlobal · IPXE-100</span></h1>
+      <div class="sub">Jenkins &amp; Slack &nbsp;·&nbsp; Sep 2026 &nbsp;·&nbsp; 402 installs on record</div>
+    </div>
+    <div class="upd">Last updated: Sep 02, 2026</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('overview',this)">📊 Overview</button>
+  <button class="tab-btn" onclick="showTab('errors',this)">🔥 Error Analysis</button>
+  <button class="tab-btn" onclick="showTab('sites',this)">🔍 Per-Site Detail</button>
+</div>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<div class="pane active" id="tab-overview">
+
+  <!-- Current month hero -->
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="hero-month">Sep 2026</div>
+        <div style="font-size:11px;opacity:.7;margin-top:4px">Source: Jenkins &amp; Slack · 402 sites on record</div>
+      </div>
+    </div>
+    <div class="hero-cards" id="heroCards"></div>
+  </div>
+
+  <!-- Month-over-month trend -->
+  <div class="panel">
+    <div class="panel-title">📈 Month-over-Month Improvement — Last 3 Months</div>
+    <div class="trend-grid" id="trendGrid"></div>
+    <div style="margin-top:16px;">
+      <div style="font-size:11px;color:#888;margin-bottom:6px;font-weight:600;">1st-Attempt Rate Trend</div>
+      <div class="spark-wrap"><canvas id="sparkChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="sec-divider">Full history</div>
+
+  <!-- All-time summary cards -->
+  <div class="cards">
+    <div class="card blue"><div class="card-label">Total Sites</div><div class="card-value">289</div><div class="card-sub">Dec 2025 – Jul 2026</div></div>
+    <div class="card green"><div class="card-label">Success Rate</div><div class="card-value">99.3%</div><div class="card-sub">287 of 289 succeeded</div></div>
+    <div class="card yellow"><div class="card-label">Needed Retry</div><div class="card-value">62</div><div class="card-sub">21.7% required 2nd+ attempt</div></div>
+    <div class="card red"><div class="card-label">Real Failures</div><div class="card-value">12</div><div class="card-sub">17 more were post-install only</div></div>
+  </div>
+
+  <div class="row2">
+    <div class="panel" style="margin-bottom:0">
+      <div class="panel-title">📊 Monthly Installations — Outcome by Attempt</div>
+      <div style="height:220px;position:relative;"><canvas id="barChart"></canvas></div>
+    </div>
+    <div class="panel" style="margin-bottom:0">
+      <div class="panel-title">🎯 All-Time Result Split</div>
+      <div style="height:185px;position:relative;"><canvas id="donutChart"></canvas></div>
+      <div id="donutLegend" style="display:flex;flex-direction:column;gap:5px;margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <div style="height:14px"></div>
+
+  <!-- Weekly breakdown (current period) -->
+  <div class="hero" style="margin-bottom:16px;">
+    <div class="hero-top">
+      <div>
+        <div class="hero-month" id="weeklyHeroMonth">Loading…</div>
+        <div style="font-size:11px;opacity:.7;margin-top:4px">Current week · Jenkins</div>
+      </div>
+    </div>
+    <div class="hero-cards" id="weeklyHeroCards"></div>
+  </div>
+
+  <!-- Weekly table -->
+  <div class="panel">
+    <div class="panel-title">📆 Weekly Breakdown (Jenkins)</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Week</th><th>Sites</th>
+          <th>✅ 1st</th><th>⚠️ 2nd</th><th>🔁 3rd+</th>
+          <th>🔧 Fail Events</th><th>❌ Perm. Fail</th>
+          <th>1st Attempt %</th>
+        </tr></thead>
+        <tbody id="weeklyBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sec-divider">Historical monthly view</div>
+
+  <div class="panel">
+    <div class="panel-title">📅 Monthly Summary</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Month</th><th>Total Sites</th>
+          <th>✅ 1st Attempt</th><th>⚠️ 2nd Attempt</th><th>🔁 3rd+ Attempt</th>
+          <th>Total Success</th><th>🔧 Failed Attempts</th><th>❌ Perm. Failed</th>
+          <th>Success Rate</th>
+        </tr></thead>
+        <tbody id="monthlyBody"></tbody>
+        <tfoot id="monthlyFoot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ ERROR ANALYSIS ═══════════════════ -->
+<div class="pane" id="tab-errors">
+
+  <div class="sec-divider" id="errHistoryDivider">Full error history</div>
+
+  <div class="insight">
+    <strong>Key finding:</strong> 29 builds were marked FAILURE — but only <strong>12 were real installation failures</strong>.
+    The other <strong>17 (59%) were successful PU installs</strong> where a post-install step (Prometheus monitoring or Bitbucket config push) failed after the PU was already live.
+  </div>
+
+  <div class="insight-grid">
+    <div class="icard ok">
+      <div class="icard-title">✅ Post-Install Failures (17) — PU was installed and live</div>
+      <div class="icard-desc">
+        <strong>Prometheus monitoring fail (10):</strong> <code>prometheus-deployment</code> job failed on May 26–28. PU fully installed — only monitoring setup missed.<br><br>
+        <strong>Bitbucket config push fail (7):</strong> <code>failed to push to customers-configuration.git</code> after install. Config commit-back failed, but PU was live.
+      </div>
+    </div>
+    <div class="icard warn">
+      <div class="icard-title">❌ Real Install Failures (12)</div>
+      <div class="icard-desc">
+        <strong>Ansible script failure (4):</strong> operation-tools script crashed — sites 902, 907–909, Apr 22–27.<br><br>
+        <strong>Rancher 503 (4):</strong> <code>rancher.uveye.cloud</code> returned 503 — sites 913–916, Apr 29 (all same day).<br><br>
+        <strong>k3s permission denied (2):</strong> sites 894, 1089. &nbsp; <strong>rsync failure (1):</strong> site 1035. &nbsp; <strong>Jenkins OOM (1):</strong> site 1069.
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">🔥 Most Repeated Issues</div>
+    <div id="errorBars"></div>
+    <div style="height:200px;position:relative;margin-top:16px;"><canvas id="errorChart"></canvas></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">📋 All Failed Builds
+      <div class="filters" style="margin:0;margin-left:auto;">
+        <select class="fsel" id="errFilterType" onchange="renderErrTable()">
+          <option value="">All types</option>
+          <option value="post-install">Post-install only</option>
+          <option value="real-fail">Real failures only</option>
+        </select>
+        <select class="fsel" id="errFilterCat" onchange="renderErrTable()">
+          <option value="">All categories</option>
+          <option value="prometheus">Prometheus</option>
+          <option value="bitbucket">Bitbucket Push</option>
+          <option value="ansible">Ansible Script</option>
+          <option value="rancher">Rancher 503</option>
+          <option value="k3s">k3s Permission</option>
+          <option value="rsync">rsync</option>
+          <option value="oom">Jenkins OOM</option>
+        </select>
+        <span class="row-count" id="errCount"></span>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Build #</th><th>Site</th><th>Date</th>
+          <th>Category</th><th>Type</th><th style="text-align:left;min-width:260px">Error</th>
+        </tr></thead>
+        <tbody id="errBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PER-SITE ═══════════════════ -->
+<div class="pane" id="tab-sites">
+
+  <!-- Slack summary months (no per-site data available) -->
+  <div class="panel" id="slackSummaryPanel">
+    <div class="panel-title">📋 Historical Months <span class="src-tag">Slack · summary only</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Month</th><th>Total Sites</th>
+          <th>✅ 1st Attempt</th><th>⚠️ 2nd</th><th>🔁 3rd+</th>
+          <th>✅ Succeeded</th><th>❌ Perm. Failed</th><th>Source</th>
+        </tr></thead>
+        <tbody id="slackSummaryBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sec-divider">Jenkins · Per-site detail</div>
+
+  <div class="panel">
+    <div class="panel-title">🔍 Per-Site Detail <span class="src-tag src-jenkins" id="sitesPanelTag">Jenkins · loading…</span></div>
+    <div class="filters">
+      <select class="fsel" id="sfMonth" onchange="renderSites()">
+        <option value="">All weeks/dates</option>
+      </select>
+      <select class="fsel" id="sfPU" onchange="renderSites()">
+        <option value="">All PU types</option>
+      </select>
+      <label class="fchk"><input type="checkbox" id="sfRetry" onchange="renderSites()"> Retries only</label>
+      <label class="fchk"><input type="checkbox" id="sfAbort" onchange="renderSites()"> Has ABORTED</label>
+      <span class="row-count" id="siteCount"></span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th onclick="sortS('site')">Site # ↕</th>
+          <th onclick="sortS('pu')">PU Type ↕</th>
+          <th onclick="sortS('date')">Install Date ↕</th>
+          <th onclick="sortS('att')">Attempts ↕</th>
+          <th>Result</th>
+          <th style="text-align:left;min-width:300px">Run History</th>
+        </tr></thead>
+        <tbody id="siteBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════ TAB NAV ════════════════════
+function showTab(id,btn) {
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='errors'&&!errorChart) { renderErrorChart(); }
+}
+
+// ════════════════════ DATA ════════════════════
+const MONTHLY=[
+  {month:'Dec 2025',total:2,s1:1,s2:0,s3:0,succ:1,failEvt:2,permFail:1,partial:false,src:'Slack'},
+  {month:'Jan 2026',total:2,s1:1,s2:1,s3:0,succ:2,failEvt:1,permFail:0,partial:false,src:'Slack'},
+  {month:'Feb 2026',total:23,s1:19,s2:3,s3:0,succ:22,failEvt:4,permFail:1,partial:false,src:'Slack'},
+  {month:'Mar 2026',total:136,s1:112,s2:22,s3:2,succ:136,failEvt:25,permFail:0,partial:false,src:'Slack'},
+  {month:'Apr 2026',total:69,s1:52,s2:13,s3:4,succ:69,failEvt:16,permFail:0,partial:false,src:'Slack'},
+  {month:'May 2026',total:52,s1:35,s2:16,s3:1,succ:52,failEvt:18,permFail:0,partial:false,src:'Slack',url:'https://uveye.slack.com/archives/C0A137H7BU7'},
+  {month:'Jun 2026',total:2,s1:2,s2:0,s3:0,succ:2,failEvt:0,permFail:0,partial:false,src:'Slack',url:'https://uveye.slack.com/archives/C0BCQPBSD4P/p1782898513610469'},
+  {month:'Jul 2026',total:3,s1:1,s2:2,s3:0,succ:3,failEvt:1,permFail:0,partial:false,src:'Slack',url:'https://uveye.slack.com/archives/C0A137H7BU7'},
+  {month:'Aug 2026',total:308,s1:221,s2:66,s3:20,succ:307,failEvt:81,permFail:1,partial:false,src:'Jenkins'},
+  {month:'Sep 2026',total:14,s1:14,s2:0,s3:0,succ:14,failEvt:0,permFail:0,partial:true,src:'Slack'}
+];
+
+const ERROR_CATS=[
+  {key:'prometheus',label:'Prometheus Monitoring Fail',count:10,type:'post-install',color:'#FFC000'},
+  {key:'bitbucket', label:'Bitbucket Config Push Fail', count:7, type:'post-install',color:'#ED7D31'},
+  {key:'ansible',   label:'Ansible Script Failure',     count:4, type:'real-fail',  color:'#FF4444'},
+  {key:'rancher',   label:'Rancher 503 Unavailable',    count:4, type:'real-fail',  color:'#E05050'},
+  {key:'k3s',       label:'k3s Permission Denied',      count:2, type:'real-fail',  color:'#C00000'},
+  {key:'rsync',     label:'rsync Failure',               count:1, type:'real-fail',  color:'#900000'},
+  {key:'oom',       label:'Jenkins OOM',                 count:1, type:'real-fail',  color:'#7030A0'},
+];
+
+// Weekly breakdown (Jenkins only, last N weeks)
+const WEEKLY=[
+  {week:'2026-W32',label:'Aug 3–9',total:30,s1:4,s2:19,s3:7,succ:30,failEvt:2,permFail:0,partial:false},
+  {week:'2026-W33',label:'Aug 10–16',total:64,s1:42,s2:16,s3:6,succ:64,failEvt:19,permFail:0,partial:false},
+  {week:'2026-W34',label:'Aug 17–23',total:72,s1:55,s2:15,s3:2,succ:72,failEvt:22,permFail:0,partial:false},
+  {week:'2026-W35',label:'Aug 24–30',total:76,s1:63,s2:12,s3:1,succ:76,failEvt:19,permFail:0,partial:false},
+  {week:'2026-W36',label:'Aug 31–Sep 6',total:19,s1:10,s2:4,s3:4,succ:18,failEvt:19,permFail:1,partial:true}
+];
+
+const ERRORS=[
+  {num:3405,site:'1310',date:'2026-08-31',cat:'oom',catLabel:'Jenkins OOM',type:'real-fail',err:'OutOfMemoryError: unable to create native thread: possibly out of memory or process/resource lim'},
+  {num:3396,site:'1318',date:'2026-08-31',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3395,site:'1320',date:'2026-08-31',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3367,site:'1309',date:'2026-08-28',cat:'other',catLabel:'Unknown Error',type:'real-fail',err:'Unknown Error'},
+  {num:3379,site:'1309',date:'2026-08-31',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3386,site:'1309',date:'2026-08-31',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3376,site:'1311',date:'2026-08-31',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3384,site:'1311',date:'2026-08-31',cat:'ansible',catLabel:'Ansible Script Failure',type:'real-fail',err:'fatal: [atlas-lite-1311]: FAILED! => {"changed": true, "cmd": "cd /uveye/configs/scripts/operation-tools/\\'},
+  {num:3365,site:'1305',date:'2026-08-28',cat:'other',catLabel:'Unknown Error',type:'real-fail',err:'Unknown Error'},
+  {num:3380,site:'1305',date:'2026-08-31',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3360,site:'1308',date:'2026-08-28',cat:'other',catLabel:'Unknown Error',type:'real-fail',err:'Unknown Error'},
+  {num:3361,site:'1307',date:'2026-08-28',cat:'other',catLabel:'Unknown Error',type:'real-fail',err:'Unknown Error'},
+  {num:3337,site:'1288',date:'2026-08-27',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3342,site:'1288',date:'2026-08-27',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3349,site:'1298',date:'2026-08-28',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3351,site:'1300',date:'2026-08-28',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3345,site:'1289',date:'2026-08-28',cat:'other',catLabel:'Unknown Error',type:'real-fail',err:'Unknown Error'},
+  {num:3339,site:'1294',date:'2026-08-27',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3311,site:'1258',date:'2026-08-26',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3322,site:'1279',date:'2026-08-26',cat:'other',catLabel:'Unknown Error',type:'real-fail',err:'Unknown Error'},
+  {num:3318,site:'1274',date:'2026-08-26',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3300,site:'1261',date:'2026-08-25',cat:'other',catLabel:'Unknown Error',type:'real-fail',err:'Unknown Error'},
+  {num:3302,site:'1263',date:'2026-08-25',cat:'other',catLabel:'Unknown Error',type:'real-fail',err:'Unknown Error'},
+  {num:3295,site:'1256',date:'2026-08-25',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3284,site:'1247',date:'2026-08-25',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3274,site:'1239',date:'2026-08-24',cat:'ansible',catLabel:'Ansible Script Failure',type:'real-fail',err:'fatal: [atlas-lite-1239]: FAILED! => {"changed": true, "cmd": "cd /uveye/configs/scripts/operation-tools/\\'},
+  {num:3251,site:'1220',date:'2026-08-21',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3243,site:'1215',date:'2026-08-21',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3225,site:'1203',date:'2026-08-20',cat:'other',catLabel:'Unknown Error',type:'real-fail',err:'Unknown Error'},
+  {num:3219,site:'1198',date:'2026-08-20',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3210,site:'1193',date:'2026-08-20',cat:'oom',catLabel:'Jenkins OOM',type:'real-fail',err:'OutOfMemoryError: unable to create native thread: possibly out of memory or process/resource lim'},
+  {num:3207,site:'1191',date:'2026-08-20',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3197,site:'1185',date:'2026-08-19',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3194,site:'1182',date:'2026-08-19',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3186,site:'1177',date:'2026-08-19',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3188,site:'1179',date:'2026-08-19',cat:'ansible',catLabel:'Ansible Script Failure',type:'real-fail',err:'fatal: [atlas-lite-1179]: FAILED! => {"changed": false, "cmd": "/usr/bin/rsync --delay-updates -F --compre'},
+  {num:3182,site:'1176',date:'2026-08-19',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3176,site:'1170',date:'2026-08-19',cat:'ansible',catLabel:'Ansible Script Failure',type:'real-fail',err:'fatal: [atlas-lite-1170]: FAILED! => {"changed": false, "cmd": "/usr/bin/rsync --delay-updates -F --compre'},
+  {num:3155,site:'1164',date:'2026-08-17',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3163,site:'1164',date:'2026-08-18',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3160,site:'1167',date:'2026-08-18',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3157,site:'1165',date:'2026-08-17',cat:'ansible',catLabel:'Ansible Script Failure',type:'real-fail',err:'fatal: [atlas-lite-1165]: FAILED! => {"changed": false, "cmd": "/usr/bin/rsync --delay-updates -F --compre'},
+  {num:3140,site:'1160',date:'2026-08-14',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3150,site:'1160',date:'2026-08-17',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3141,site:'1159',date:'2026-08-14',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3133,site:'1151',date:'2026-08-14',cat:'ansible',catLabel:'Ansible Script Failure',type:'real-fail',err:'fatal: [atlas-lite-1151]: FAILED! => {"changed": false, "cmd": "/usr/bin/rsync --delay-updates -F --compre'},
+  {num:3132,site:'1153',date:'2026-08-14',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3129,site:'1148',date:'2026-08-14',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3128,site:'1150',date:'2026-08-14',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3120,site:'1142',date:'2026-08-14',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3096,site:'1133',date:'2026-08-12',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3100,site:'1133',date:'2026-08-12',cat:'ansible',catLabel:'Ansible Script Failure',type:'real-fail',err:'fatal: [atlas-lite-1133]: FAILED! => {"changed": false, "cmd": "/usr/bin/rsync --delay-updates -F --compre'},
+  {num:3095,site:'1131',date:'2026-08-12',cat:'ansible',catLabel:'Ansible Script Failure',type:'real-fail',err:'fatal: [atlas-lite-1131]: FAILED! => {"changed": true, "cmd": "cd /uveye/configs/scripts/operation-tools/\\'},
+  {num:3092,site:'1128',date:'2026-08-12',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3085,site:'1122',date:'2026-08-12',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3073,site:'1117',date:'2026-08-11',cat:'other',catLabel:'Unknown Error',type:'real-fail',err:'Unknown Error'},
+  {num:3070,site:'1118',date:'2026-08-11',cat:'oom',catLabel:'Jenkins OOM',type:'real-fail',err:'OutOfMemoryError: unable to create native thread: possibly out of memory or process/resource lim'},
+  {num:3043,site:'1068',date:'2026-08-10',cat:'oom',catLabel:'Jenkins OOM',type:'real-fail',err:'OutOfMemoryError: unable to create native thread: possibly out of memory or process/resource lim'},
+  {num:2947,site:'1065',date:'2026-08-05',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'},
+  {num:3024,site:'1108',date:'2026-08-10',cat:'ansible',catLabel:'Ansible Script Failure',type:'real-fail',err:'fatal: [atlas-lite-1108]: FAILED! => {"changed": false, "cmd": "/usr/bin/rsync --delay-updates -F --compre'},
+  {num:3032,site:'1108',date:'2026-08-10',cat:'oom',catLabel:'Jenkins OOM',type:'real-fail',err:'OutOfMemoryError: unable to create native thread: possibly out of memory or process/resource lim'},
+  {num:2994,site:'1076',date:'2026-08-07',cat:'oom',catLabel:'Jenkins OOM',type:'real-fail',err:'OutOfMemoryError: unable to create native thread: possibly out of memory or process/resource lim'},
+  {num:2977,site:'1102',date:'2026-08-06',cat:'prometheus',catLabel:'Prometheus Monitoring Fail',type:'post-install',err:'prometheus-deployment'}
+];
+
+const SITES=[
+  {site:'1272',pu:'artelios',att:1,attLabel:'1st',date:'2026-09-02',src:'Jenkins',runs:'SUCCESS(2026-09-02)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3422/'},
+  {site:'1271',pu:'artelios',att:1,attLabel:'1st',date:'2026-09-02',src:'Jenkins',runs:'SUCCESS(2026-09-02)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3423/'},
+  {site:'1270',pu:'artelios',att:1,attLabel:'1st',date:'2026-09-02',src:'Jenkins',runs:'SUCCESS(2026-09-02)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3421/'},
+  {site:'1331',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-09-01',src:'Jenkins',runs:'SUCCESS(2026-09-01)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3420/'},
+  {site:'1332',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-09-01',src:'Jenkins',runs:'SUCCESS(2026-09-01)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3419/'},
+  {site:'1336',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-09-01',src:'Jenkins',runs:'SUCCESS(2026-09-01)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3418/'},
+  {site:'1335',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-09-01',src:'Jenkins',runs:'SUCCESS(2026-09-01)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3417/'},
+  {site:'1333',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-09-01',src:'Jenkins',runs:'SUCCESS(2026-09-01)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3415/'},
+  {site:'1334',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-09-01',src:'Jenkins',runs:'SUCCESS(2026-09-01)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3414/'},
+  {site:'1329',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-09-01',src:'Jenkins',runs:'SUCCESS(2026-09-01)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3411/'},
+  {site:'1330',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-09-01',src:'Jenkins',runs:'SUCCESS(2026-09-01)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3410/'},
+  {site:'1327',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-09-01',src:'Jenkins',runs:'SUCCESS(2026-09-01)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3409/'},
+  {site:'1328',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-09-01',src:'Jenkins',runs:'SUCCESS(2026-09-01)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3408/'},
+  {site:'1310',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-09-01',src:'Jenkins',runs:'SUCCESS(2026-09-01)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3407/'},
+  {site:'1264',pu:'artelios',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3389/'},
+  {site:'1311',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3387/'},
+  {site:'1305',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3385/'},
+  {site:'1316',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3383/'},
+  {site:'1317',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3382/'},
+  {site:'1308',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3381/'},
+  {site:'1313',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3378/'},
+  {site:'1307',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3377/'},
+  {site:'1325',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3403/'},
+  {site:'1321',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3402/'},
+  {site:'1324',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3401/'},
+  {site:'1318',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3400/'},
+  {site:'1320',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3399/'},
+  {site:'1323',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3397/'},
+  {site:'1322',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3398/'},
+  {site:'1319',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3394/'},
+  {site:'1314',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3393/'},
+  {site:'1309',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-31',src:'Jenkins',runs:'SUCCESS(2026-08-31)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3392/'},
+  {site:'1306',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-29',src:'Jenkins',runs:'SUCCESS(2026-08-29)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3369/'},
+  {site:'1312',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-29',src:'Jenkins',runs:'SUCCESS(2026-08-29)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3368/'},
+  {site:'1288',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3359/'},
+  {site:'1303',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3357/'},
+  {site:'1304',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3358/'},
+  {site:'1298',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3356/'},
+  {site:'1300',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3355/'},
+  {site:'1289',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3354/'},
+  {site:'1296',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3353/'},
+  {site:'1302',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3352/'},
+  {site:'1299',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3348/'},
+  {site:'1297',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3347/'},
+  {site:'1301',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3350/'},
+  {site:'1295',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3346/'},
+  {site:'1294',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3343/'},
+  {site:'1285',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3341/'},
+  {site:'1293',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3340/'},
+  {site:'1292',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3338/'},
+  {site:'1291',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3336/'},
+  {site:'1290',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3335/'},
+  {site:'1287',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3333/'},
+  {site:'1286',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3332/'},
+  {site:'1283',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3330/'},
+  {site:'1284',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3331/'},
+  {site:'1282',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-28',src:'Jenkins',runs:'SUCCESS(2026-08-28)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3329/'},
+  {site:'1258',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-27',src:'Jenkins',runs:'SUCCESS(2026-08-27)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3328/'},
+  {site:'1281',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-27',src:'Jenkins',runs:'SUCCESS(2026-08-27)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3327/'},
+  {site:'1280',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-27',src:'Jenkins',runs:'SUCCESS(2026-08-27)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3326/'},
+  {site:'1275',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-27',src:'Jenkins',runs:'SUCCESS(2026-08-27)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3325/'},
+  {site:'1277',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-27',src:'Jenkins',runs:'SUCCESS(2026-08-27)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3324/'},
+  {site:'1279',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-27',src:'Jenkins',runs:'SUCCESS(2026-08-27)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3323/'},
+  {site:'1278',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-27',src:'Jenkins',runs:'SUCCESS(2026-08-27)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3321/'},
+  {site:'1274',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-27',src:'Jenkins',runs:'SUCCESS(2026-08-27)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3320/'},
+  {site:'1276',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-27',src:'Jenkins',runs:'SUCCESS(2026-08-27)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3319/'},
+  {site:'1271',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3315/'},
+  {site:'1272',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3314/'},
+  {site:'1270',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3313/'},
+  {site:'1273',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3312/'},
+  {site:'1264',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3305/'},
+  {site:'1261',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3304/'},
+  {site:'1263',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3303/'},
+  {site:'1269',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3310/'},
+  {site:'1268',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3309/'},
+  {site:'1265',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3306/'},
+  {site:'1266',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3308/'},
+  {site:'1267',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3307/'},
+  {site:'1262',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3301/'},
+  {site:'1259',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3299/'},
+  {site:'1260',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3297/'},
+  {site:'1256',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3296/'},
+  {site:'1257',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3294/'},
+  {site:'1254',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3293/'},
+  {site:'1255',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3292/'},
+  {site:'1253',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3291/'},
+  {site:'1252',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3290/'},
+  {site:'1251',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3289/'},
+  {site:'1250',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-26',src:'Jenkins',runs:'SUCCESS(2026-08-26)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3288/'},
+  {site:'1249',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3287/'},
+  {site:'1247',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3286/'},
+  {site:'1248',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3285/'},
+  {site:'1245',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3283/'},
+  {site:'1246',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3282/'},
+  {site:'1244',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3281/'},
+  {site:'1243',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3280/'},
+  {site:'1242',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3279/'},
+  {site:'1239',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3278/'},
+  {site:'1238',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3273/'},
+  {site:'1241',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3276/'},
+  {site:'1240',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3275/'},
+  {site:'1237',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3269/'},
+  {site:'1236',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3268/'},
+  {site:'1234',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3271/'},
+  {site:'1235',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3270/'},
+  {site:'1232',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3266/'},
+  {site:'1231',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3265/'},
+  {site:'1233',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3264/'},
+  {site:'1230',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-25',src:'Jenkins',runs:'SUCCESS(2026-08-25)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3263/'},
+  {site:'1229',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3261/'},
+  {site:'1227',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3259/'},
+  {site:'1228',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3260/'},
+  {site:'1226',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3258/'},
+  {site:'1225',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3257/'},
+  {site:'1224',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3256/'},
+  {site:'1223',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3255/'},
+  {site:'1220',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3254/'},
+  {site:'1219',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3253/'},
+  {site:'1222',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3252/'},
+  {site:'1221',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3250/'},
+  {site:'1218',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3248/'},
+  {site:'1215',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3247/'},
+  {site:'1217',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3246/'},
+  {site:'1216',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3244/'},
+  {site:'1214',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3242/'},
+  {site:'1212',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3241/'},
+  {site:'1213',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3240/'},
+  {site:'1211',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3239/'},
+  {site:'1210',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-21',src:'Jenkins',runs:'SUCCESS(2026-08-21)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3238/'},
+  {site:'1209',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3235/'},
+  {site:'1208',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3234/'},
+  {site:'1207',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3233/'},
+  {site:'1204',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3232/'},
+  {site:'1205',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3231/'},
+  {site:'1206',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3230/'},
+  {site:'1203',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3229/'},
+  {site:'1202',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3228/'},
+  {site:'1201',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3227/'},
+  {site:'1200',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3226/'},
+  {site:'1198',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3223/'},
+  {site:'1197',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3221/'},
+  {site:'1196',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3220/'},
+  {site:'1199',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3218/'},
+  {site:'1193',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3215/'},
+  {site:'1195',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3214/'},
+  {site:'1194',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3213/'},
+  {site:'1191',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3212/'},
+  {site:'1192',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3209/'},
+  {site:'1190',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-20',src:'Jenkins',runs:'SUCCESS(2026-08-20)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3208/'},
+  {site:'1185',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3200/'},
+  {site:'1180',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3199/'},
+  {site:'1184',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3198/'},
+  {site:'1182',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3196/'},
+  {site:'1183',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3195/'},
+  {site:'1177',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3193/'},
+  {site:'1181',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3191/'},
+  {site:'1179',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3190/'},
+  {site:'1178',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3187/'},
+  {site:'1176',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3185/'},
+  {site:'1175',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3183/'},
+  {site:'1174',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3181/'},
+  {site:'1170',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3180/'},
+  {site:'1173',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3179/'},
+  {site:'1172',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3178/'},
+  {site:'1171',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-19',src:'Jenkins',runs:'SUCCESS(2026-08-19)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3177/'},
+  {site:'1164',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-18',src:'Jenkins',runs:'SUCCESS(2026-08-18)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3168/'},
+  {site:'1064',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-18',src:'Jenkins',runs:'SUCCESS(2026-08-18)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3166/'},
+  {site:'1063',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-18',src:'Jenkins',runs:'SUCCESS(2026-08-18)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3165/'},
+  {site:'1167',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-18',src:'Jenkins',runs:'SUCCESS(2026-08-18)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3164/'},
+  {site:'1165',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-18',src:'Jenkins',runs:'SUCCESS(2026-08-18)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3162/'},
+  {site:'1168',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-18',src:'Jenkins',runs:'SUCCESS(2026-08-18)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3161/'},
+  {site:'1166',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-18',src:'Jenkins',runs:'SUCCESS(2026-08-18)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3159/'},
+  {site:'1162',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-18',src:'Jenkins',runs:'SUCCESS(2026-08-18)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3156/'},
+  {site:'1163',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-18',src:'Jenkins',runs:'SUCCESS(2026-08-18)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3153/'},
+  {site:'1161',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-18',src:'Jenkins',runs:'SUCCESS(2026-08-18)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3154/'},
+  {site:'1160',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-18',src:'Jenkins',runs:'SUCCESS(2026-08-18)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3151/'},
+  {site:'1159',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-17',src:'Jenkins',runs:'SUCCESS(2026-08-17)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3149/'},
+  {site:'1156',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-14',src:'Jenkins',runs:'SUCCESS(2026-08-14)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3142/'},
+  {site:'1158',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-14',src:'Jenkins',runs:'SUCCESS(2026-08-14)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3143/'},
+  {site:'1157',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-14',src:'Jenkins',runs:'SUCCESS(2026-08-14)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3139/'},
+  {site:'1151',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-14',src:'Jenkins',runs:'SUCCESS(2026-08-14)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3138/'},
+  {site:'955',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'956',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'957',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'958',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'959',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'960',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'961',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'962',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'963',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'964',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'965',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'966',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'967',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'968',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'969',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'970',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'971',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'972',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'973',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'974',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'975',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'976',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'977',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'978',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'979',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'980',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'981',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'982',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'983',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'984',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'985',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'986',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'987',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'988',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'989',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'990',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'991',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'992',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'993',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'994',pu:'artelios',att:1,attLabel:'1st',date:'2026-03-25',src:'Slack',runs:'SUCCESS(2026-03-25)'},
+  {site:'847',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-03-23',src:'Slack',runs:'SUCCESS(2026-03-23)'},
+  {site:'848',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-03-23',src:'Slack',runs:'SUCCESS(2026-03-23)'},
+  {site:'851',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-03-23',src:'Slack',runs:'SUCCESS(2026-03-23)'},
+  {site:'856',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-03-23',src:'Slack',runs:'SUCCESS(2026-03-23)'},
+  {site:'857',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-03-23',src:'Slack',runs:'SUCCESS(2026-03-23)'},
+  {site:'858',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-03-23',src:'Slack',runs:'SUCCESS(2026-03-23)'},
+  {site:'859',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-03-23',src:'Slack',runs:'SUCCESS(2026-03-23)'},
+  {site:'860',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-03-23',src:'Slack',runs:'SUCCESS(2026-03-23)'},
+  {site:'995',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'996',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'997',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'998',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'999',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1000',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1001',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1002',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1003',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1004',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1005',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1006',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1007',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1008',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1009',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1010',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1011',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1012',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1013',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1014',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1015',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1016',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1017',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1018',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1019',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1020',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1021',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1022',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1023',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1024',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1025',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1026',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1027',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1028',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1029',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1030',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1031',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1032',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1033',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1034',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1035',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1036',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1037',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1038',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1039',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1040',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1041',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1042',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1043',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'1044',pu:'artelios',att:1,attLabel:'1st',date:'2026-04-10',src:'Slack',runs:'SUCCESS(2026-04-10)'},
+  {site:'892',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'893',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'894',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'895',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'896',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'898',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'899',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'900',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'901',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'902',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'907',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'908',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'909',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'910',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'712',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'913',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'914',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'915',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'916',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-04-20',src:'Slack',runs:'SUCCESS(2026-04-20)'},
+  {site:'925',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-05-05',src:'Slack',runs:'SUCCESS(2026-05-05)'},
+  {site:'657',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-05-05',src:'Slack',runs:'SUCCESS(2026-05-05)'},
+  {site:'1045',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1046',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1047',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1048',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1049',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1050',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1051',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1052',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1053',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1054',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1055',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1056',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1057',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1058',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1059',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1060',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'802',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'873',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1061',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1062',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1063',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1064',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1065',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1066',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1067',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1068',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1069',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1070',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1071',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1072',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1073',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1074',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1075',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1076',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1077',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1078',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1079',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1080',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1081',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1082',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1083',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1084',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1085',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1086',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1087',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1088',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1089',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1090',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1091',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'1092',pu:'artelios',att:1,attLabel:'1st',date:'2026-05-15',src:'Slack',runs:'SUCCESS(2026-05-15)'},
+  {site:'749',pu:'artelios',att:1,attLabel:'1st',date:'2026-06-07',src:'Slack',runs:'SUCCESS(2026-06-07)'},
+  {site:'1093',pu:'artelios',att:1,attLabel:'1st',date:'2026-06-07',src:'Slack',runs:'SUCCESS(2026-06-07)'},
+  {site:'1062',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-07-10',src:'Slack',runs:'SUCCESS(2026-07-10)'},
+  {site:'1063',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-07-10',src:'Slack',runs:'SUCCESS(2026-07-10)'},
+  {site:'1064',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-07-10',src:'Slack',runs:'SUCCESS(2026-07-10)'},
+  {site:'1137',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-13',src:'Jenkins',runs:'SUCCESS(2026-08-13)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3113/'},
+  {site:'1138',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-13',src:'Jenkins',runs:'SUCCESS(2026-08-13)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3112/'},
+  {site:'1135',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-13',src:'Jenkins',runs:'SUCCESS(2026-08-13)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3111/'},
+  {site:'1140',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-13',src:'Jenkins',runs:'SUCCESS(2026-08-13)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3108/'},
+  {site:'1139',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-13',src:'Jenkins',runs:'SUCCESS(2026-08-13)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3107/'},
+  {site:'1136',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3104/'},
+  {site:'1133',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3103/'},
+  {site:'1134',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3101/'},
+  {site:'1131',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3099/'},
+  {site:'1130',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3098/'},
+  {site:'1132',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3097/'},
+  {site:'1128',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3094/'},
+  {site:'1125',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3091/'},
+  {site:'1127',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3089/'},
+  {site:'1126',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3088/'},
+  {site:'1129',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3090/'},
+  {site:'1122',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3086/'},
+  {site:'1123',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3083/'},
+  {site:'1120',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3084/'},
+  {site:'1121',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3082/'},
+  {site:'1124',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3080/'},
+  {site:'1117',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-12',src:'Jenkins',runs:'SUCCESS(2026-08-12)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3078/'},
+  {site:'1118',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-11',src:'Jenkins',runs:'SUCCESS(2026-08-11)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3075/'},
+  {site:'1115',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-11',src:'Jenkins',runs:'SUCCESS(2026-08-11)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3067/'},
+  {site:'1116',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-11',src:'Jenkins',runs:'SUCCESS(2026-08-11)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3069/'},
+  {site:'1119',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-11',src:'Jenkins',runs:'SUCCESS(2026-08-11)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3068/'},
+  {site:'1114',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-10',src:'Jenkins',runs:'SUCCESS(2026-08-10)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3056/'},
+  {site:'1113',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-10',src:'Jenkins',runs:'SUCCESS(2026-08-10)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3054/'},
+  {site:'1112',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-10',src:'Jenkins',runs:'SUCCESS(2026-08-10)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3052/'},
+  {site:'1111',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-10',src:'Jenkins',runs:'SUCCESS(2026-08-10)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3051/'},
+  {site:'1110',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-10',src:'Jenkins',runs:'SUCCESS(2026-08-10)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3050/'},
+  {site:'1108',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-10',src:'Jenkins',runs:'SUCCESS(2026-08-10)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3038/'},
+  {site:'1106',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-10',src:'Jenkins',runs:'SUCCESS(2026-08-10)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3025/'},
+  {site:'1109',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-10',src:'Jenkins',runs:'SUCCESS(2026-08-10)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3026/'},
+  {site:'1107',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-10',src:'Jenkins',runs:'SUCCESS(2026-08-10)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3023/'},
+  {site:'1105',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-10',src:'Jenkins',runs:'SUCCESS(2026-08-10)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3022/'},
+  {site:'1094',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2992/'},
+  {site:'1095',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2972/'},
+  {site:'1096',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2970/'},
+  {site:'1097',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2969/'},
+  {site:'1098',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2971/'},
+  {site:'1099',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2968/'},
+  {site:'1100',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2974/'},
+  {site:'1101',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2973/'},
+  {site:'1102',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2981/'},
+  {site:'1103',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2976/'},
+  {site:'1104',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2975/'}
+];
+
+// ════════════════════ HERO + TREND ════════════════════
+function pct(n,d){return d?Math.round(n/d*100):0;}
+function fmt1r(m){return{s1r:pct(m.s1,m.total),rr:pct(m.s2+m.s3,m.succ),fr:pct(m.failEvt,m.total)};}
+
+function delta(cur,prev,key,higherIsBetter=true){
+  const d=cur[key]-prev[key];
+  if(Math.abs(d)<1) return '<span class="delta-nc">→ no change</span>';
+  const up=d>0;
+  const good=(up&&higherIsBetter)||(!up&&!higherIsBetter);
+  const cls=good?'delta-up':'delta-dn';
+  return `<span class="${cls}">${up?'↑':'↓'} ${Math.abs(d).toFixed(1)}pp vs prev</span>`;
+}
+
+function renderHero(){
+  const cur=MONTHLY[MONTHLY.length-1]; // Jun
+  const prev=MONTHLY[MONTHLY.length-2]; // May
+  const c=fmt1r(cur), p=fmt1r(prev);
+  document.getElementById('heroCards').innerHTML=[
+    {label:'Sites This Month',val:cur.total+(cur.partial?' <span style="font-size:12px;opacity:.7">(partial)</span>':''),d:''},
+    {label:'1st Attempt Rate',val:c.s1r+'%',d:delta({v:c.s1r},{v:p.s1r},'v',true)
+      .replace('cur','').replace('{','{v:c.s1r}')},
+    {label:'Retry Rate',val:c.rr+'%',d:''},
+    {label:'Failure Events',val:cur.failEvt,d:''},
+  ].map((x,i)=>{
+    // Compute deltas manually
+    const vals=[
+      {v:cur.total,pv:prev.total,hib:true},
+      {v:c.s1r,pv:p.s1r,hib:true},
+      {v:c.rr,pv:p.rr,hib:false},
+      {v:cur.failEvt,pv:prev.failEvt,hib:false},
+    ][i];
+    const d2=vals.v-vals.pv;
+    let dHtml='<span class="delta-nc" style="opacity:.6">—</span>';
+    if(Math.abs(d2)>=1){
+      const up=d2>0;
+      const good=(up&&vals.hib)||(!up&&!vals.hib);
+      dHtml=`<span class="${good?'delta-up':'delta-dn'}">${up?'↑':'↓'} ${Math.abs(d2).toFixed(1)}${i>0&&i<3?'pp':''} vs ${prev.month}</span>`;
+    }
+    return `<div class="hcard"><div class="hcard-label">${x.label}</div><div class="hcard-value">${x.val}</div><div class="hcard-delta">${cur.partial&&i===0?'<span class="delta-nc">month in progress</span>':dHtml}</div></div>`;
+  }).join('');
+}
+
+function renderTrend(){
+  const last3=MONTHLY.slice(-3); // Apr, May, Jun
+  document.getElementById('trendGrid').innerHTML=last3.map((m,i)=>{
+    const isCur=i===last3.length-1;
+    const s1r=pct(m.s1,m.total), rr=pct(m.s2+m.s3,m.succ), sr=pct(m.succ,m.total);
+    const prev=i>0?last3[i-1]:null;
+    function td(cur,pv,hib){
+      if(!prev) return '';
+      const d=cur-pv; if(Math.abs(d)<1) return '';
+      const up=d>0; const good=(up&&hib)||(!up&&!hib);
+      return `<span class="${good?'tup':'tdn'}" style="font-size:10px">${up?'↑':'↓'}${Math.abs(d).toFixed(0)}pp</span>`;
+    }
+    return `<div class="tcard${isCur?' current':''}">
+      <div class="tcard-month">${m.month}${m.partial?' <span style="font-size:9px;color:#aaa">(partial)</span>':''}</div>
+      <div class="tcard-rows">
+        <div class="tcard-row"><span class="tcard-key">Sites</span><span class="tcard-val">${m.total} ${prev?td(m.total,prev.total,true):''}</span></div>
+        <div class="tcard-row"><span class="tcard-key">1st attempt</span><span class="tcard-val">${s1r}% ${prev?td(s1r,pct(prev.s1,prev.total),true):''}</span></div>
+        <div class="tcard-row"><span class="tcard-key">Retry rate</span><span class="tcard-val">${rr}% ${prev?td(rr,pct(prev.s2+prev.s3,prev.succ),false):''}</span></div>
+        <div class="tcard-row"><span class="tcard-key">Success rate</span><span class="tcard-val">${sr}%</span></div>
+        <div class="tcard-row"><span class="tcard-key">Fail events</span><span class="tcard-val">${m.failEvt} ${prev?td(m.failEvt,prev.failEvt,false):''}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Spark line: 1st attempt rate per month
+  new Chart(document.getElementById('sparkChart'),{
+    type:'line',
+    data:{
+      labels:MONTHLY.map(m=>m.month.replace(' 20','\'').replace(' ','<br>')),
+      datasets:[{
+        label:'1st Attempt %',
+        data:MONTHLY.map(m=>pct(m.s1,m.total)),
+        borderColor:'#2E75B6',backgroundColor:'rgba(46,117,182,.1)',
+        tension:.3,fill:true,pointRadius:4,pointBackgroundColor:'#2E75B6',
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw}% on 1st attempt`}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10}}},
+              y:{min:0,max:100,grid:{color:'#f0f0f0'},ticks:{font:{size:10},callback:v=>v+'%'}}}}
+  });
+}
+
+// ════════════════════ MONTHLY TABLE ════════════════════
+function renderMonthlyTable(){
+  const tbody=document.getElementById('monthlyBody');
+  const tfoot=document.getElementById('monthlyFoot');
+  let tots={total:0,s1:0,s2:0,s3:0,succ:0,failEvt:0,permFail:0};
+  tbody.innerHTML='';
+  MONTHLY.forEach(m=>{
+    Object.keys(tots).forEach(k=>tots[k]+=m[k]||0);
+    const rate=m.total?(m.succ/m.total*100).toFixed(1)+'%':'—';
+    const rn=m.total?m.succ/m.total:0;
+    const src=m.src==='Jenkins'?'<span class="src-tag src-jenkins">Jenkins</span>':'<span class="src-tag">Slack</span>';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${m.month}${m.partial?' <span class="partial-note">(partial)</span>':''} ${src}</td>
+      <td><strong>${m.total}</strong></td>
+      <td><span class="pill pill-green">${m.s1}</span></td>
+      <td>${m.s2>0?`<span class="pill pill-yellow">${m.s2}</span>`:'<span style="color:#aaa">—</span>'}</td>
+      <td>${m.s3>0?`<span class="pill pill-orange">${m.s3}</span>`:'<span style="color:#aaa">—</span>'}</td>
+      <td><strong>${m.succ}</strong></td>
+      <td>${m.failEvt>0?`<span class="pill pill-yellow">${m.failEvt}</span>`:'<span style="color:#aaa">0</span>'}</td>
+      <td>${m.permFail>0?`<span class="pill pill-red">${m.permFail}</span>`:'<span style="color:#aaa">0</span>'}</td>
+      <td><div class="rate-bar"><div class="rate-fill" style="width:${rn*80}px"></div><span class="rate-text">${rate}</span></div></td>`;
+    tbody.appendChild(tr);
+  });
+  tfoot.innerHTML=`<tr><td>TOTAL</td><td>${tots.total}</td><td>${tots.s1}</td><td>${tots.s2}</td><td>${tots.s3}</td><td>${tots.succ}</td><td>${tots.failEvt}</td><td>${tots.permFail}</td><td>${(tots.succ/tots.total*100).toFixed(1)}%</td></tr>`;
+}
+
+// ════════════════════ CHARTS ════════════════════
+function renderCharts(){
+  new Chart(document.getElementById('barChart'),{
+    type:'bar',
+    data:{labels:MONTHLY.map(m=>m.month),datasets:[
+      {label:'1st Attempt',  data:MONTHLY.map(m=>m.s1),      backgroundColor:'#70AD47',stack:'s'},
+      {label:'2nd Attempt',  data:MONTHLY.map(m=>m.s2),      backgroundColor:'#FFC000',stack:'s'},
+      {label:'3rd+ Attempt', data:MONTHLY.map(m=>m.s3),      backgroundColor:'#ED7D31',stack:'s'},
+      {label:'Perm. Failed', data:MONTHLY.map(m=>m.permFail),backgroundColor:'#FF4444',stack:'s'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:10}}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10}}},
+              y:{beginAtZero:true,grid:{color:'#f0f0f0'},ticks:{font:{size:10},stepSize:20}}}}
+  });
+  const t1=MONTHLY.reduce((a,m)=>a+m.s1,0),t2=MONTHLY.reduce((a,m)=>a+m.s2,0),
+        t3=MONTHLY.reduce((a,m)=>a+m.s3,0),tf=MONTHLY.reduce((a,m)=>a+m.permFail,0);
+  new Chart(document.getElementById('donutChart'),{
+    type:'doughnut',
+    data:{labels:['1st Attempt','2nd Attempt','3rd+ Attempt','Perm. Failed'],
+      datasets:[{data:[t1,t2,t3,tf],backgroundColor:['#70AD47','#FFC000','#ED7D31','#FF4444'],borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw} (${(ctx.raw/(t1+t2+t3+tf)*100).toFixed(1)}%)`}}}}
+  });
+  document.getElementById('donutLegend').innerHTML=
+    [{c:'#70AD47',l:'1st Attempt',v:t1},{c:'#FFC000',l:'2nd Attempt',v:t2},{c:'#ED7D31',l:'3rd+ Attempt',v:t3},{c:'#FF4444',l:'Perm. Failed',v:tf}]
+    .map(i=>`<div style="display:flex;align-items:center;gap:8px;font-size:11px"><div style="width:10px;height:10px;border-radius:50%;background:${i.c};flex-shrink:0"></div><span style="flex:1">${i.l}</span><strong>${i.v}</strong></div>`).join('');
+}
+
+// ════════════════════ ERROR BARS + CHART ════════════════════
+let errorChart=null;
+function renderErrorBars(){
+  const max=10;
+  document.getElementById('errorBars').innerHTML=ERROR_CATS.map(c=>`
+    <div class="error-cat-bar">
+      <div class="ecb-name">${c.label}</div>
+      <div class="ecb-bar-wrap"><div class="ecb-bar-fill" style="width:${(c.count/max)*100}%;background:${c.color}"></div></div>
+      <div class="ecb-count">${c.count}</div>
+      <div class="ecb-type ${c.type==='post-install'?'type-post':'type-real'}">${c.type==='post-install'?'✅ post-install':'❌ real fail'}</div>
+    </div>`).join('');
+}
+function renderErrorChart(){
+  if(errorChart) return;
+  errorChart=new Chart(document.getElementById('errorChart'),{
+    type:'bar',
+    data:{labels:ERROR_CATS.map(c=>c.label),datasets:[{data:ERROR_CATS.map(c=>c.count),backgroundColor:ERROR_CATS.map(c=>c.color),borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`  ${ctx.raw} builds`}}},
+      scales:{x:{beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{color:'#f0f0f0'}},y:{ticks:{font:{size:11}},grid:{display:false}}}}
+  });
+}
+function renderErrTable(){
+  const tf=document.getElementById('errFilterType').value;
+  const cf=document.getElementById('errFilterCat').value;
+  let rows=ERRORS.slice();
+  if(tf) rows=rows.filter(r=>r.type===tf);
+  if(cf) rows=rows.filter(r=>r.cat===cf);
+  rows.sort((a,b)=>b.num-a.num);
+  const tbody=document.getElementById('errBody');
+  tbody.innerHTML='';
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="6" class="no-data">No results.</td></tr>';}
+  else rows.forEach(r=>{
+    const tp=r.type==='post-install'?'<span class="pill pill-yellow">post-install</span>':'<span class="pill pill-red">real failure</span>';
+    const cc=ERROR_CATS.find(c=>c.key===r.cat)?.color||'#888';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><a href="https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/${r.num}" target="_blank" style="color:#2E75B6;text-decoration:none;font-weight:600">#${r.num}</a></td>
+      <td><strong>${r.site}</strong></td><td>${r.date}</td>
+      <td><span style="border-left:3px solid ${cc};padding-left:6px;font-size:11px;font-weight:600">${r.catLabel}</span></td>
+      <td>${tp}</td>
+      <td style="text-align:left;font-size:11px;color:#555">${r.err}</td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('errCount').textContent=`${rows.length} build${rows.length!==1?'s':''} shown`;
+}
+
+// ════════════════════ SITE TABLE ════════════════════
+let _sk='date',_sa=true;
+function colorR(r){return r.replace(/SUCCESS/g,'<span class="rs">SUCCESS</span>').replace(/FAILURE/g,'<span class="rf">FAILURE</span>').replace(/ABORTED/g,'<span class="ra">ABORTED</span>');}
+function attPill(l,a){if(a===1)return`<span class="pill pill-green">${l}</span>`;if(a===2)return`<span class="pill pill-yellow">${l}</span>`;return`<span class="pill pill-orange">${l}</span>`;}
+function renderSites(){
+  const mo=document.getElementById('sfMonth').value,pu=document.getElementById('sfPU').value;
+  const re=document.getElementById('sfRetry').checked,ab=document.getElementById('sfAbort').checked;
+  let rows=SITES.slice();
+  if(mo) rows=rows.filter(r=>r.date.startsWith(mo));
+  if(pu) rows=rows.filter(r=>r.pu===pu);
+  if(re) rows=rows.filter(r=>r.att>1);
+  if(ab) rows=rows.filter(r=>r.runs.includes('ABORTED'));
+  rows.sort((a,b)=>{let av=a[_sk],bv=b[_sk];if(_sk==='site'){av=parseInt(av)||0;bv=parseInt(bv)||0;}return _sa?(av<bv?-1:av>bv?1:0):(av>bv?-1:av<bv?1:0);});
+  const tbody=document.getElementById('siteBody');
+  tbody.innerHTML='';
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="6" class="no-data">No sites match.</td></tr>';}
+  else rows.forEach(r=>{const tr=document.createElement('tr');const finalOk=!r.runs||r.runs.includes('SUCCESS')?`<span class="pill pill-green">✅ SUCCESS</span>`:`<span class="pill pill-red">❌ FAILED</span>`;const srcBadge=r.src==='Slack'?` <span class="src-tag" style="font-size:9px;vertical-align:middle">Slack</span>`:'';tr.innerHTML=`<td>${r.url?`<a href="${r.url}" target="_blank" style="color:inherit;text-decoration:underline dotted"><strong>${r.site}</strong></a>`:`<strong>${r.site}</strong>`}${srcBadge}</td><td><span class="pill pill-blue">${r.pu}</span></td><td>${r.date}</td><td>${attPill(r.attLabel,r.att)}${r.att>1?` <span style="color:#aaa;font-size:10px">(${r.att}×)</span>`:''}</td><td>${finalOk}</td><td><div class="run-chain">${colorR(r.runs)}</div></td>`;tbody.appendChild(tr);});
+  document.getElementById('siteCount').textContent=`${rows.length} site${rows.length!==1?'s':''} shown`;
+}
+function sortS(k){_sk===k?_sa=!_sa:(_sk=k,_sa=true);renderSites();}
+
+// ════════════════════ WEEKLY HERO ════════════════════
+function renderWeeklyHero(){
+  if(!WEEKLY||!WEEKLY.length) return;
+  const cur=WEEKLY[WEEKLY.length-1];
+  const prev=WEEKLY.length>=2?WEEKLY[WEEKLY.length-2]:null;
+  const el=document.getElementById('weeklyHeroCards');
+  if(!el) return;
+  function wd(cv,pv,hib){
+    if(!prev||!pv) return '';
+    const d=cv-pv; if(Math.abs(d)<0.5) return '';
+    const up=d>0; const good=(up&&hib)||(!up&&!hib);
+    return `<span class="${good?'delta-up':'delta-dn'}" style="font-size:10px">${up?'↑':'↓'}${Math.abs(d).toFixed(0)}${typeof cv==='number'&&cv<100?'pp':''} WoW</span>`;
+  }
+  const s1r=cur.total?Math.round(cur.s1/cur.total*100):0;
+  const ps1r=prev&&prev.total?Math.round(prev.s1/prev.total*100):0;
+  el.innerHTML=[
+    {label:'Sites This Week',val:cur.total,dv:cur.total,dpv:prev?prev.total:0,hib:true},
+    {label:'1st Attempt Rate',val:s1r+'%',dv:s1r,dpv:ps1r,hib:true},
+    {label:'Retries',val:cur.s2+cur.s3,dv:cur.s2+cur.s3,dpv:prev?prev.s2+prev.s3:0,hib:false},
+    {label:'Fail Events',val:cur.failEvt,dv:cur.failEvt,dpv:prev?prev.failEvt:0,hib:false},
+  ].map(x=>`<div class="hcard"><div class="hcard-label">${x.label}</div><div class="hcard-value">${x.val}</div><div class="hcard-delta">${wd(x.dv,x.dpv,x.hib)}</div></div>`).join('');
+  const wh=document.getElementById('weeklyHeroMonth');
+  if(wh) wh.textContent=cur.label+(cur.partial?' (partial week)':'');
+}
+
+// ════════════════════ WEEKLY TABLE ════════════════════
+function renderWeeklyTable(){
+  const tb=document.getElementById('weeklyBody');
+  if(!tb) return;
+  tb.innerHTML='';
+  [...WEEKLY].reverse().forEach(w=>{
+    const s1r=w.total?Math.round(w.s1/w.total*100):0;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${w.label}${w.partial?' <span class="partial-note">(partial)</span>':''}</td>
+      <td><strong>${w.total}</strong></td>
+      <td><span class="pill pill-green">${w.s1}</span></td>
+      <td>${w.s2>0?`<span class="pill pill-yellow">${w.s2}</span>`:'<span style="color:#aaa">—</span>'}</td>
+      <td>${w.s3>0?`<span class="pill pill-orange">${w.s3}</span>`:'<span style="color:#aaa">—</span>'}</td>
+      <td>${w.failEvt>0?`<span class="pill pill-yellow">${w.failEvt}</span>`:'0'}</td>
+      <td>${w.permFail>0?`<span class="pill pill-red">${w.permFail}</span>`:'0'}</td>
+      <td><div class="rate-bar"><div class="rate-fill" style="width:${s1r*.8}px"></div><span class="rate-text">${s1r}%</span></div></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+// ════════════════════ SLACK SUMMARY TABLE (Per-Site tab) ════════════════════
+function renderSlackSummary(){
+  const tb=document.getElementById('slackSummaryBody');
+  if(!tb) return;
+  const slackMonths=MONTHLY.filter(m=>m.src==='Slack');
+  if(!slackMonths.length){
+    document.getElementById('slackSummaryPanel').style.display='none';
+    return;
+  }
+  tb.innerHTML=slackMonths.map(m=>{
+    const s1r=m.total?Math.round(m.s1/m.total*100):0;
+    const srcLabel=m.partial?'Slack channel ↗':'Slack report ↗';
+    const srcCell=m.url
+      ? `<a href="${m.url}" target="_blank" style="color:#2E75B6;text-decoration:none">${srcLabel}</a>`
+      : `<span style="color:#aaa">Slack (manual)</span>`;
+    return `<tr>
+      <td><strong>${m.month}</strong>${m.partial?' <span class="partial-note">(partial)</span>':''}</td>
+      <td>${m.total}</td>
+      <td><span class="pill pill-green">${m.s1}</span> <span style="color:#aaa;font-size:10px">${s1r}%</span></td>
+      <td>${m.s2>0?`<span class="pill pill-yellow">${m.s2}</span>`:'<span style="color:#aaa">—</span>'}</td>
+      <td>${m.s3>0?`<span class="pill pill-orange">${m.s3}</span>`:'<span style="color:#aaa">—</span>'}</td>
+      <td>${m.succ}</td>
+      <td>${m.permFail>0?`<span class="pill pill-red">${m.permFail}</span>`:'<span style="color:#aaa">0</span>'}</td>
+      <td>${srcCell}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════ DYNAMIC FILTERS ════════════════════
+function populateFilters(){
+  // Month filter — only show months that have actual SITES data
+  const allMonths=[...new Set(SITES.map(s=>s.date.slice(0,7)))].sort();
+  const msel=document.getElementById('sfMonth');
+  allMonths.forEach(ym=>{
+    const [y,m]=ym.split('-');
+    const label=new Date(y,m-1,1).toLocaleString('default',{month:'long',year:'numeric'});
+    const opt=document.createElement('option');
+    opt.value=ym; opt.textContent=label;
+    msel.appendChild(opt);
+  });
+  // PU type filter
+  const pus=[...new Set(SITES.map(s=>s.pu))].sort();
+  const psel=document.getElementById('sfPU');
+  pus.forEach(p=>{
+    const opt=document.createElement('option');
+    opt.value=p; opt.textContent=p;
+    psel.appendChild(opt);
+  });
+  // Update Sites panel tag
+  const tag=document.getElementById('sitesPanelTag');
+  if(tag&&SITES.length){
+    const dates=SITES.map(s=>s.date).sort();
+    tag.textContent=`Jenkins · ${dates[0]} – ${dates[dates.length-1]} · ${SITES.length} sites`;
+  }
+}
+
+// ════════════════════ STALENESS INDICATOR ════════════════════
+(function checkStaleness(){
+  const el=document.querySelector('.upd');
+  if(!el) return;
+  const txt=el.textContent||'';
+  const m=txt.match(/Last updated:\s*(.+)/);
+  if(!m) return;
+  const ts=new Date(m[1]);
+  const hoursOld=(Date.now()-ts)/(1000*3600);
+  if(hoursOld>28){
+    el.style.color='#ffcc00';
+    el.title='Data may be stale — script runs daily at 9am';
+  }
+  // Auto-reload every 6 hours if page stays open
+  setTimeout(()=>location.reload(), 6*3600*1000);
+})();
+
+// ════════════════════ INIT ════════════════════
+populateFilters();
+renderSlackSummary();
+renderHero();
+renderTrend();
+renderMonthlyTable();
+renderWeeklyHero();
+renderWeeklyTable();
+renderCharts();
+renderErrorBars();
+renderErrTable();
+renderSites();
+</script>
+</body>
+</html>
