@@ -4,6 +4,62 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>HiperGlobal PU Installation Dashboard</title>
+<script>
+// ── Login gate ────────────────────────────────────────────────────────────────
+(function(){
+  const PASS_HASH = '6d4a0a0fa309cd91b01e29e63c694bc05a32f64ebfc9c7c6de2ba7b88f9c8a0c'; // sha256 of UvEye2026!
+  async function sha256(str){
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  function showGate(){
+    document.documentElement.style.visibility='hidden';
+    window.addEventListener('DOMContentLoaded',function(){
+      document.documentElement.style.visibility='';
+      const overlay=document.createElement('div');
+      overlay.id='login-overlay';
+      overlay.innerHTML=`
+        <div style="background:#1F3864;min-height:100vh;display:flex;align-items:center;justify-content:center;">
+          <div style="background:#fff;border-radius:16px;padding:40px 48px;box-shadow:0 8px 40px rgba(0,0,0,.25);text-align:center;min-width:320px;">
+            <div style="font-size:32px;margin-bottom:8px;">🔒</div>
+            <h2 style="margin:0 0 4px;color:#1F3864;font-family:Arial,sans-serif;">HiperGlobal Dashboard</h2>
+            <p style="color:#888;font-size:13px;margin:0 0 24px;font-family:Arial,sans-serif;">Enter password to continue</p>
+            <input id="gate-pw" type="password" placeholder="Password"
+              style="width:100%;box-sizing:border-box;padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:12px;outline:none;"/>
+            <button id="gate-btn"
+              style="width:100%;padding:10px;background:#2E75B6;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">
+              Enter
+            </button>
+            <div id="gate-err" style="color:#e53935;font-size:12px;margin-top:10px;font-family:Arial,sans-serif;display:none;">
+              Incorrect password. Try again.
+            </div>
+          </div>
+        </div>`;
+      document.body.prepend(overlay);
+      document.body.style.overflow='hidden';
+      const input=document.getElementById('gate-pw');
+      const btn=document.getElementById('gate-btn');
+      const err=document.getElementById('gate-err');
+      async function tryLogin(){
+        const h=await sha256(input.value);
+        if(h===PASS_HASH){
+          sessionStorage.setItem('auth','1');
+          overlay.remove();
+          document.body.style.overflow='';
+        } else {
+          err.style.display='block';
+          input.value='';
+          input.focus();
+        }
+      }
+      btn.addEventListener('click',tryLogin);
+      input.addEventListener('keydown',function(e){ if(e.key==='Enter') tryLogin(); });
+      setTimeout(()=>input.focus(),100);
+    });
+  }
+  if(sessionStorage.getItem('auth')!=='1') showGate();
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
 <style>
 :root{color-scheme:light;}
@@ -139,7 +195,7 @@ tfoot td:first-child{text-align:left;}
       <h1>PU Installation Dashboard <span class="badge">HiperGlobal · IPXE-100</span></h1>
       <div class="sub">Jenkins &amp; Slack &nbsp;·&nbsp; Sep 2026 &nbsp;·&nbsp; 402 installs on record</div>
     </div>
-    <div class="upd">Last updated: Sep 02, 2026</div>
+    <div class="upd">Last updated: Sep 03, 2026</div>
   </div>
 </div>
 
