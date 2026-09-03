@@ -193,7 +193,7 @@ tfoot td:first-child{text-align:left;}
   <div class="hrow">
     <div>
       <h1>PU Installation Dashboard <span class="badge">HiperGlobal · IPXE-100</span></h1>
-      <div class="sub">Jenkins &amp; Slack &nbsp;·&nbsp; Sep 2026 &nbsp;·&nbsp; 402 installs on record</div>
+      <div class="sub">Jenkins &amp; Slack &nbsp;·&nbsp; Sep 2026 &nbsp;·&nbsp; 404 installs on record</div>
     </div>
     <div class="upd">Last updated: Sep 03, 2026</div>
   </div>
@@ -327,8 +327,18 @@ tfoot td:first-child{text-align:left;}
     </div>
   </div>
 
+  <div class="panel" id="failSitesPanel" style="display:none">
+    <div class="panel-title">❌ Failed Install Sites <span class="src-tag src-jenkins" id="failSitesTag"></span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Site</th><th>PU</th><th>Date</th><th>Build</th><th>Status</th></tr></thead>
+        <tbody id="failSitesBody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="panel">
-    <div class="panel-title">🔥 Most Repeated Issues</div>
+    <div class="panel-title">🔥 Most Repeated Issues (Historical)</div>
     <div id="errorBars"></div>
     <div style="height:200px;position:relative;margin-top:16px;"><canvas id="errorChart"></canvas></div>
   </div>
@@ -397,6 +407,7 @@ tfoot td:first-child{text-align:left;}
       </select>
       <label class="fchk"><input type="checkbox" id="sfRetry" onchange="renderSites()"> Retries only</label>
       <label class="fchk"><input type="checkbox" id="sfAbort" onchange="renderSites()"> Has ABORTED</label>
+      <label class="fchk"><input type="checkbox" id="sfFail" onchange="renderSites()"> ❌ Failures only</label>
       <span class="row-count" id="siteCount"></span>
     </div>
     <div class="tbl-wrap">
@@ -436,7 +447,7 @@ const MONTHLY=[
   {month:'Jun 2026',total:2,s1:2,s2:0,s3:0,succ:2,failEvt:0,permFail:0,partial:false,src:'Slack',url:'https://uveye.slack.com/archives/C0BCQPBSD4P/p1782898513610469'},
   {month:'Jul 2026',total:3,s1:1,s2:2,s3:0,succ:3,failEvt:1,permFail:0,partial:false,src:'Slack',url:'https://uveye.slack.com/archives/C0A137H7BU7'},
   {month:'Aug 2026',total:308,s1:221,s2:66,s3:20,succ:307,failEvt:81,permFail:1,partial:false,src:'Jenkins'},
-  {month:'Sep 2026',total:14,s1:14,s2:0,s3:0,succ:14,failEvt:0,permFail:0,partial:true,src:'Slack'}
+  {month:'Sep 2026',total:16,s1:14,s2:0,s3:0,succ:14,failEvt:2,permFail:2,partial:true,src:'Jenkins'}
 ];
 
 const ERROR_CATS=[
@@ -926,7 +937,9 @@ const SITES=[
   {site:'1101',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2973/'},
   {site:'1102',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2981/'},
   {site:'1103',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2976/'},
-  {site:'1104',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2975/'}
+  {site:'1104',pu:'atlas-lite',att:1,attLabel:'1st',date:'2026-08-07',src:'Jenkins',runs:'SUCCESS(2026-08-07)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/2975/'},
+  {site:'1276',pu:'artelios',att:1,attLabel:'1st',date:'2026-09-03',src:'Jenkins',runs:'FAILURE(2026-09-03)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3433/'},
+  {site:'1277',pu:'artelios',att:1,attLabel:'1st',date:'2026-09-03',src:'Jenkins',runs:'FAILURE(2026-09-03)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3434/'}
 ];
 
 // ════════════════════ HERO + TREND ════════════════════
@@ -1070,6 +1083,27 @@ function renderCharts(){
     .map(i=>`<div style="display:flex;align-items:center;gap:8px;font-size:11px"><div style="width:10px;height:10px;border-radius:50%;background:${i.c};flex-shrink:0"></div><span style="flex:1">${i.l}</span><strong>${i.v}</strong></div>`).join('');
 }
 
+// ════════════════════ FAILURE SITES (dynamic) ════════════════════
+function renderFailSites(){
+  const failed=SITES.filter(r=>r.runs&&r.runs.includes('FAILURE')).sort((a,b)=>b.date.localeCompare(a.date));
+  const panel=document.getElementById('failSitesPanel');
+  const tbody=document.getElementById('failSitesBody');
+  if(!failed.length){panel.style.display='none';return;}
+  panel.style.display='';
+  document.getElementById('failSitesTag').textContent=`${failed.length} failed site${failed.length!==1?'s':''}`;
+  tbody.innerHTML='';
+  failed.forEach(r=>{
+    const buildNum=r.url?r.url.match(/\/(\d+)\/$/)?.[1]:'—';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r.url?`<a href="${r.url}" target="_blank" style="color:#843c0c;text-decoration:underline dotted;font-weight:600">${r.site}</a>`:`<strong>${r.site}</strong>`}</td>
+      <td><span class="pill pill-blue">${r.pu}</span></td>
+      <td>${r.date}</td>
+      <td>${buildNum!=='—'?`<a href="${r.url}" target="_blank" style="color:#2E75B6;text-decoration:none;font-weight:600">#${buildNum}</a>`:'—'}</td>
+      <td><span class="pill pill-red">❌ FAILURE</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
 // ════════════════════ ERROR BARS + CHART ════════════════════
 let errorChart=null;
 function renderErrorBars(){
@@ -1123,12 +1157,13 @@ function colorR(r){return r.replace(/SUCCESS/g,'<span class="rs">SUCCESS</span>'
 function attPill(l,a){if(a===1)return`<span class="pill pill-green">${l}</span>`;if(a===2)return`<span class="pill pill-yellow">${l}</span>`;return`<span class="pill pill-orange">${l}</span>`;}
 function renderSites(){
   const mo=document.getElementById('sfMonth').value,pu=document.getElementById('sfPU').value;
-  const re=document.getElementById('sfRetry').checked,ab=document.getElementById('sfAbort').checked;
+  const re=document.getElementById('sfRetry').checked,ab=document.getElementById('sfAbort').checked,fl=document.getElementById('sfFail').checked;
   let rows=SITES.slice();
   if(mo) rows=rows.filter(r=>r.date.startsWith(mo));
   if(pu) rows=rows.filter(r=>r.pu===pu);
   if(re) rows=rows.filter(r=>r.att>1);
   if(ab) rows=rows.filter(r=>r.runs.includes('ABORTED'));
+  if(fl) rows=rows.filter(r=>r.runs&&r.runs.includes('FAILURE'));
   rows.sort((a,b)=>{let av=a[_sk],bv=b[_sk];if(_sk==='site'){av=parseInt(av)||0;bv=parseInt(bv)||0;}return _sa?(av<bv?-1:av>bv?1:0):(av>bv?-1:av<bv?1:0);});
   const tbody=document.getElementById('siteBody');
   tbody.innerHTML='';
@@ -1265,6 +1300,7 @@ renderMonthlyTable();
 renderWeeklyHero();
 renderWeeklyTable();
 renderCharts();
+renderFailSites();
 renderErrorBars();
 renderErrTable();
 renderSites();
