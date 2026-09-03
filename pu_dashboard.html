@@ -7,7 +7,7 @@
 <script>
 // ── Login gate ────────────────────────────────────────────────────────────────
 (function(){
-  const PASS_HASH = '6d4a0a0fa309cd91b01e29e63c694bc05a32f64ebfc9c7c6de2ba7b88f9c8a0c'; // sha256 of UvEye2026!
+  const PASS_HASH = '43ae01de3381ffa044049485c60c9a484983c2cc641df1e98a23bba2548b7d90'; // sha256 of UvEye2026!
   async function sha256(str){
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
     return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
