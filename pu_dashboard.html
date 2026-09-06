@@ -60,6 +60,8 @@
   if(sessionStorage.getItem('auth')!=='1') showGate();
 })();
 </script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
 <style>
 :root{color-scheme:light;}
@@ -247,15 +249,10 @@ tfoot td:first-child{text-align:left;}
 <div class="header">
   <div class="hrow">
     <div class="hlogo">
-      <!-- UvEye wordmark logo -->
-      <svg viewBox="0 0 160 44" xmlns="http://www.w3.org/2000/svg" style="height:38px;flex-shrink:0;">
-        <!-- UV in orange -->
-        <text x="0" y="36" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="38" fill="#F4722B" letter-spacing="-1">UV</text>
-        <!-- EYE in white -->
-        <text x="74" y="36" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="38" fill="#ffffff" letter-spacing="-1">EYE</text>
-        <!-- orange underline accent -->
-        <rect x="0" y="40" width="160" height="3" rx="1.5" fill="#F4722B" opacity=".5"/>
-      </svg>
+      <!-- UvEye wordmark -->
+      <div style="display:flex;align-items:baseline;gap:0;line-height:1;font-family:'Exo 2','Arial Black',Arial,sans-serif;font-weight:900;font-size:32px;letter-spacing:-0.5px;">
+        <span style="color:#F4722B;">UV</span><span style="color:#ffffff;">EYE</span>
+      </div>
       <div class="htitle-block">
         <div class="htitle-top">
           <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.5px;text-transform:uppercase;">Install Dashboard</span>
