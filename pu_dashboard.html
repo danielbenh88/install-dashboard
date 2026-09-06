@@ -66,19 +66,81 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;font-size:13px;}
 
-/* Header */
-.header{background:linear-gradient(135deg,#1F3864 0%,#2E75B6 100%);color:#fff;padding:16px 24px 12px;}
-.header h1{font-size:19px;font-weight:700;}
-.header .sub{font-size:11px;opacity:.7;margin-top:2px;}
-.hrow{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:8px;}
-.badge{display:inline-block;background:rgba(255,255,255,.18);border-radius:10px;padding:2px 10px;font-size:10px;margin-left:6px;}
-.upd{font-size:13px;opacity:.85;font-weight:500;}
+/* ── Header ── */
+.header{
+  background:#0a1628;
+  color:#fff;
+  padding:0;
+  border-bottom:3px solid #FF6B00;
+  position:relative;
+  overflow:hidden;
+}
+.header::before{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(120deg,#0a1628 55%,#162d54 100%);
+  z-index:0;
+}
+.header::after{
+  content:'';
+  position:absolute;top:0;right:0;
+  width:320px;height:100%;
+  background:radial-gradient(ellipse at right,rgba(255,107,0,.18) 0%,transparent 70%);
+  z-index:0;
+}
+.hrow{
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;
+  padding:18px 28px 14px;
+  position:relative;z-index:1;
+}
+.hlogo{
+  display:flex;align-items:center;gap:16px;
+}
+.hlogo-icon{
+  width:46px;height:46px;flex-shrink:0;
+  background:#fff;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 12px rgba(0,0,0,.4);
+}
+.hlogo-icon svg{width:34px;height:34px;}
+.htitle-block{}
+.htitle-top{
+  display:flex;align-items:center;gap:10px;
+}
+.header h1{
+  font-size:21px;font-weight:800;letter-spacing:-.3px;
+  background:linear-gradient(90deg,#fff 60%,#FF6B00 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.header .sub{font-size:11px;color:rgba(255,255,255,.55);margin-top:3px;letter-spacing:.2px;}
+.badge{
+  display:inline-block;
+  background:rgba(255,107,0,.25);
+  border:1px solid rgba(255,107,0,.5);
+  color:#ffa05e;
+  border-radius:8px;padding:2px 10px;font-size:10px;font-weight:700;
+  letter-spacing:.3px;
+}
+.hright{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.upd{font-size:11px;color:rgba(255,255,255,.5);font-weight:500;}
+.hlive{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:#4cde80;font-weight:600;
+}
+.hlive-dot{
+  width:7px;height:7px;border-radius:50%;background:#4cde80;
+  box-shadow:0 0 6px #4cde80;
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* Tabs */
-.tabs{display:flex;background:#162d54;gap:2px;padding:0 20px;}
-.tab-btn{padding:10px 18px;font-size:12px;font-weight:600;color:rgba(255,255,255,.6);border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;transition:.2s;}
+.tabs{display:flex;background:#06101f;gap:0;padding:0 24px;border-bottom:1px solid rgba(255,255,255,.07);}
+.tab-btn{padding:11px 20px;font-size:12px;font-weight:600;color:rgba(255,255,255,.45);border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;transition:.2s;letter-spacing:.2px;}
 .tab-btn:hover{color:#fff;}
-.tab-btn.active{color:#fff;border-bottom-color:#5BA3E0;}
+.tab-btn.active{color:#FF6B00;border-bottom-color:#FF6B00;}
 
 /* Layout */
 .pane{display:none;padding:16px 20px;}
@@ -191,11 +253,28 @@ tfoot td:first-child{text-align:left;}
 
 <div class="header">
   <div class="hrow">
-    <div>
-      <h1>PU Installation Dashboard <span class="badge">HiperGlobal · IPXE-100</span></h1>
-      <div class="sub">Jenkins &amp; Slack &nbsp;·&nbsp; Sep 2026 &nbsp;·&nbsp; 425 installs on record</div>
+    <div class="hlogo">
+      <!-- UvEye "eye" icon -->
+      <div class="hlogo-icon">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="50" cy="50" rx="48" ry="30" fill="none" stroke="#0a1628" stroke-width="7"/>
+          <circle cx="50" cy="50" r="16" fill="#FF6B00"/>
+          <circle cx="50" cy="50" r="7" fill="#0a1628"/>
+          <circle cx="56" cy="44" r="3.5" fill="#fff" opacity=".7"/>
+        </svg>
+      </div>
+      <div class="htitle-block">
+        <div class="htitle-top">
+          <h1>UV · Install Dashboard</h1>
+          <span class="badge">HiperGlobal</span>
+        </div>
+        <div class="sub">Jenkins &amp; Slack &nbsp;·&nbsp; Sep 2026 &nbsp;·&nbsp; 425 installs on record</div>
+      </div>
     </div>
-    <div class="upd">Last updated: Sep 05, 2026</div>
+    <div class="hright">
+      <div class="hlive"><span class="hlive-dot"></span>Live · Auto-updates daily</div>
+      <div class="upd">Last updated: Sep 05, 2026</div>
+    </div>
   </div>
 </div>
 
