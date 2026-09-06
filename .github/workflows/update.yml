@@ -59,6 +59,11 @@ jobs:
         with:
           ref: main   # pick up the just-committed changes
 
+      - name: Inject password hash
+        env:
+          PASS_HASH: ${{ secrets.PASS_HASH }}
+        run: sed -i "s|__PASS_HASH__|${PASS_HASH}|g" pu_dashboard.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
