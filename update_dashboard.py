@@ -11,11 +11,43 @@ Required env var: SLACK_TOKEN  (Slack user token with groups:history scope)
 
 import os, re, json, datetime, requests
 
-SLACK_TOKEN  = os.environ['SLACK_TOKEN']
+SLACK_TOKEN   = os.environ['SLACK_TOKEN']
+JENKINS_USER  = os.environ.get('JENKINS_USER', '')
+JENKINS_TOKEN = os.environ.get('JENKINS_TOKEN', '')
+JENKINS_AUTH  = (JENKINS_USER, JENKINS_TOKEN) if JENKINS_USER and JENKINS_TOKEN else None
+
 CHANNEL_ID   = 'C0A137H7BU7'           # #hiperglobal-installation-notification
 JENKINS_BASE = 'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site'
 HTML_PATH    = 'pu_dashboard.html'
 STATE_PATH   = 'state.json'
+
+# ── Jenkins console log fetcher ───────────────────────────────────────────────
+
+def fetch_jenkins_error(build_num):
+    """Fetch last meaningful error lines from Jenkins console log."""
+    if not JENKINS_AUTH:
+        return None
+    url = f"{JENKINS_BASE}/{build_num}/consoleText"
+    try:
+        r = requests.get(url, auth=JENKINS_AUTH, timeout=20)
+        if r.status_code != 200:
+            return None
+        lines = r.text.splitlines()
+        # Grab last 60 lines and look for error keywords
+        tail = lines[-60:]
+        error_lines = [l.strip() for l in tail if any(k in l for k in
+            ['ERROR', 'FAILED', 'fatal:', 'Exception', 'Error:', 'stderr', 'Failed to', '503', 'FAILURE'])]
+        if error_lines:
+            # Return the most descriptive line (longest, up to 160 chars)
+            best = max(error_lines, key=len)
+            return best[:160]
+        # Fallback: last non-empty line
+        for l in reversed(tail):
+            if l.strip():
+                return l.strip()[:160]
+    except Exception as e:
+        print(f"  Jenkins fetch failed for #{build_num}: {e}")
+    return None
 
 # ── Slack helpers ─────────────────────────────────────────────────────────────
 
@@ -107,7 +139,13 @@ def parse_messages(messages):
             item = dict(site=site, pu=pu, build_num=build_num,
                         date_str=date_str, ts=ts, status=status)
             if status == 'FAILURE':
-                cat, label, typ, snippet = categorize_error(full_text)
+                # Try to get real error from Jenkins console
+                jenkins_err = fetch_jenkins_error(build_num)
+                combined = (jenkins_err or '') + ' ' + full_text
+                cat, label, typ, snippet = categorize_error(combined)
+                # Prefer the Jenkins error line as the display snippet
+                if jenkins_err:
+                    snippet = jenkins_err[:160]
                 item.update(cat=cat, catLabel=label, err_type=typ, err_snippet=snippet)
             results.append(item)
     return results

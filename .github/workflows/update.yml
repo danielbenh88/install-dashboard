@@ -34,7 +34,9 @@ jobs:
 
       - name: Run updater
         env:
-          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          SLACK_TOKEN:   ${{ secrets.SLACK_TOKEN }}
+          JENKINS_USER:  ${{ secrets.JENKINS_USER }}
+          JENKINS_TOKEN: ${{ secrets.JENKINS_TOKEN }}
         run: python update_dashboard.py
 
       - name: Commit & push changes
