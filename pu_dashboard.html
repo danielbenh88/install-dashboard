@@ -97,13 +97,6 @@ body{font-family:Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;font-size:13p
 .hlogo{
   display:flex;align-items:center;gap:16px;
 }
-.hlogo-icon{
-  width:46px;height:46px;flex-shrink:0;
-  background:#fff;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 2px 12px rgba(0,0,0,.4);
-}
-.hlogo-icon svg{width:34px;height:34px;}
 .htitle-block{}
 .htitle-top{
   display:flex;align-items:center;gap:10px;
@@ -254,18 +247,18 @@ tfoot td:first-child{text-align:left;}
 <div class="header">
   <div class="hrow">
     <div class="hlogo">
-      <!-- UvEye "eye" icon -->
-      <div class="hlogo-icon">
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="50" cy="50" rx="48" ry="30" fill="none" stroke="#0a1628" stroke-width="7"/>
-          <circle cx="50" cy="50" r="16" fill="#FF6B00"/>
-          <circle cx="50" cy="50" r="7" fill="#0a1628"/>
-          <circle cx="56" cy="44" r="3.5" fill="#fff" opacity=".7"/>
-        </svg>
-      </div>
+      <!-- UvEye wordmark logo -->
+      <svg viewBox="0 0 160 44" xmlns="http://www.w3.org/2000/svg" style="height:38px;flex-shrink:0;">
+        <!-- UV in orange -->
+        <text x="0" y="36" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="38" fill="#F4722B" letter-spacing="-1">UV</text>
+        <!-- EYE in white -->
+        <text x="74" y="36" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="38" fill="#ffffff" letter-spacing="-1">EYE</text>
+        <!-- orange underline accent -->
+        <rect x="0" y="40" width="160" height="3" rx="1.5" fill="#F4722B" opacity=".5"/>
+      </svg>
       <div class="htitle-block">
         <div class="htitle-top">
-          <h1>UV · Install Dashboard</h1>
+          <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.5px;text-transform:uppercase;">Install Dashboard</span>
           <span class="badge">HiperGlobal</span>
         </div>
         <div class="sub">Jenkins &amp; Slack &nbsp;·&nbsp; Sep 2026 &nbsp;·&nbsp; 425 installs on record</div>
