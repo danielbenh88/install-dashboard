@@ -2,7 +2,8 @@
 """
 Auto-updater for pu_dashboard.html.
 Reads new install notifications from #hiperglobal-installation-notification (Slack),
-adds new SITES entries (SUCCESS and FAILURE), updates MONTHLY counts, stats, and date.
+adds new SITES entries (SUCCESS and FAILURE), updates MONTHLY counts, ERRORS array,
+stats, and date.
 GitHub Actions commits & pushes the result.
 
 Required env var: SLACK_TOKEN  (Slack user token with groups:history scope)
@@ -44,6 +45,38 @@ def get_all_new_messages(oldest_ts):
             break
     return messages
 
+# ── Error categorization ──────────────────────────────────────────────────────
+
+ERROR_RULES = [
+    ('prometheus', 'Prometheus Monitoring Fail', 'post-install',
+     re.compile(r'prometheus.deployment|prometheus.*fail', re.I)),
+    ('bitbucket',  'Bitbucket Push Fail',        'post-install',
+     re.compile(r'customers.configuration\.git|failed to push', re.I)),
+    ('oom',        'Jenkins OOM',                'real-fail',
+     re.compile(r'OutOfMemoryError|out of memory', re.I)),
+    ('ansible',    'Ansible Script Failure',     'real-fail',
+     re.compile(r'FAILED!.*changed|ansible.*FAILED|operation.tools', re.I)),
+    ('rancher',    'Rancher 503',                'real-fail',
+     re.compile(r'rancher.*503|503.*rancher', re.I)),
+    ('k3s',        'k3s Permission',             'real-fail',
+     re.compile(r'k3s.*permission|permission denied.*k3s', re.I)),
+    ('rsync',      'rsync Failure',              'real-fail',
+     re.compile(r'rsync.*fail|failed.*rsync', re.I)),
+]
+
+def categorize_error(text):
+    """Return (cat, catLabel, type, err_snippet) from failure message text."""
+    for cat, label, typ, pattern in ERROR_RULES:
+        if pattern.search(text):
+            # Try to grab a short snippet around the match
+            m = pattern.search(text)
+            start = max(0, m.start() - 20)
+            snippet = text[start:start+120].replace('\n', ' ').strip()
+            return cat, label, typ, snippet
+    # Fallback
+    snippet = text[:120].replace('\n', ' ').strip() if text.strip() else 'See Jenkins build'
+    return 'other', 'Unknown Error', 'real-fail', snippet
+
 # ── Message parsing ───────────────────────────────────────────────────────────
 
 INSTALL_RE = re.compile(
@@ -52,81 +85,128 @@ INSTALL_RE = re.compile(
 )
 
 def parse_messages(messages):
-    """Return list of (site, pu, build_num, date_str, ts, status) for all install messages."""
+    """
+    Return list of dicts with keys:
+      site, pu, build_num, date_str, ts, status,
+      cat, catLabel, err_type, err_snippet   (for FAILURE only)
+    """
     results = []
     for msg in messages:
         ts = msg.get('ts', '0')
+        full_text = ''
         for att in msg.get('attachments', []):
-            text = att.get('text', '') + ' ' + att.get('fallback', '')
-            m = INSTALL_RE.search(text)
-            if m:
-                status    = m.group(1).upper()   # SUCCESS or FAILURE
-                build_num = int(m.group(2))
-                pu        = m.group(3)
-                site      = m.group(4)
-                dt        = datetime.datetime.utcfromtimestamp(float(ts))
-                date_str  = dt.strftime('%Y-%m-%d')
-                results.append((site, pu, build_num, date_str, ts, status))
+            full_text += att.get('text', '') + ' ' + att.get('fallback', '') + ' '
+        m = INSTALL_RE.search(full_text)
+        if m:
+            status    = m.group(1).upper()
+            build_num = int(m.group(2))
+            pu        = m.group(3)
+            site      = m.group(4)
+            dt        = datetime.datetime.utcfromtimestamp(float(ts))
+            date_str  = dt.strftime('%Y-%m-%d')
+            item = dict(site=site, pu=pu, build_num=build_num,
+                        date_str=date_str, ts=ts, status=status)
+            if status == 'FAILURE':
+                cat, label, typ, snippet = categorize_error(full_text)
+                item.update(cat=cat, catLabel=label, err_type=typ, err_snippet=snippet)
+            results.append(item)
     return results
 
 # ── HTML update ───────────────────────────────────────────────────────────────
 
+def _escape_js(s):
+    return s.replace('\\', '\\\\').replace("'", "\\'").replace('\n', ' ')
+
 def update_html(new_installs):
     """
-    Append new entries to SITES, update MONTHLY + stats.
-    new_installs: list of (site, pu, build, date, ts, status) — deduplicated, newest-per-(site,pu).
+    Append new SITES entries and ERRORS entries, update MONTHLY + stats.
+    new_installs: list of dicts — deduplicated, newest-per-(site,pu).
     Returns count of entries added.
     """
     with open(HTML_PATH, encoding='utf-8') as f:
         c = f.read()
 
-    # Existing (site, pu) pairs already in SITES array
+    # ── Existing (site, pu) pairs in SITES ──
     sites_m = re.search(r'const SITES=\[(.*?)\];', c, re.DOTALL)
     if not sites_m:
         raise RuntimeError("SITES array not found in HTML")
-    existing = set(re.findall(r"site:'(\d+)',pu:'([^']+)'", sites_m.group(1)))
+    existing_sites = set(re.findall(r"site:'(\d+)',pu:'([^']+)'", sites_m.group(1)))
 
-    added_entries  = []
-    added_success  = {}   # month_key -> count of new successes
-    added_failures = {}   # month_key -> count of new permanent failures
-    added_fail_evts = {}  # month_key -> count of fail events (any failure, even if later succeeded)
+    # ── Existing build numbers in ERRORS ──
+    errors_m = re.search(r'const ERRORS=\[(.*?)\];', c, re.DOTALL)
+    existing_errors = set(int(n) for n in re.findall(r'\bnum:(\d+)', errors_m.group(1) if errors_m else ''))
 
-    for site, pu, build, date, ts, status in new_installs:
-        if (site, pu) in existing:
-            continue
-        existing.add((site, pu))
-        url   = f"{JENKINS_BASE}/{build}/"
-        runs  = f"{status}({date})"
-        entry = (f"  {{site:'{site}',pu:'{pu}',att:1,attLabel:'1st',"
-                 f"date:'{date}',src:'Jenkins',runs:'{runs}',url:'{url}'}}")
-        added_entries.append(entry)
-        month_key = date[:7]
-        if status == 'SUCCESS':
-            added_success[month_key]   = added_success.get(month_key, 0) + 1
-        else:
-            added_failures[month_key]  = added_failures.get(month_key, 0) + 1
-            added_fail_evts[month_key] = added_fail_evts.get(month_key, 0) + 1
+    new_sites_entries   = []
+    new_errors_entries  = []
+    added_success  = {}
+    added_failures = {}
+    added_fail_evts = {}
 
-    if not added_entries:
+    for item in new_installs:
+        site      = item['site']
+        pu        = item['pu']
+        build     = item['build_num']
+        date      = item['date_str']
+        status    = item['status']
+
+        # ── SITES entry ──
+        if (site, pu) not in existing_sites:
+            existing_sites.add((site, pu))
+            url   = f"{JENKINS_BASE}/{build}/"
+            runs  = f"{status}({date})"
+            new_sites_entries.append(
+                f"  {{site:'{site}',pu:'{pu}',att:1,attLabel:'1st',"
+                f"date:'{date}',src:'Jenkins',runs:'{runs}',url:'{url}'}}"
+            )
+            month_key = date[:7]
+            if status == 'SUCCESS':
+                added_success[month_key]    = added_success.get(month_key, 0) + 1
+            else:
+                added_failures[month_key]   = added_failures.get(month_key, 0) + 1
+                added_fail_evts[month_key]  = added_fail_evts.get(month_key, 0) + 1
+
+        # ── ERRORS entry (FAILURE only, deduplicated by build number) ──
+        if status == 'FAILURE' and build not in existing_errors:
+            existing_errors.add(build)
+            cat     = item.get('cat', 'other')
+            label   = item.get('catLabel', 'Unknown Error')
+            typ     = item.get('err_type', 'real-fail')
+            snippet = _escape_js(item.get('err_snippet', 'See Jenkins build'))
+            new_errors_entries.append(
+                f"  {{num:{build},site:'{site}',date:'{date}',"
+                f"cat:'{cat}',catLabel:'{label}',type:'{typ}',err:'{snippet}'}}"
+            )
+
+    # ── Append to SITES ──
+    if new_sites_entries:
+        sites_end = re.search(r'(const SITES=\[.*?)(\n\];)', c, re.DOTALL)
+        c = (c[:sites_end.end(1)]
+             + ',\n' + ',\n'.join(new_sites_entries)
+             + sites_end.group(2)
+             + c[sites_end.end():])
+
+    # ── Append to ERRORS ──
+    if new_errors_entries:
+        errors_end = re.search(r'(const ERRORS=\[.*?)(\n\];)', c, re.DOTALL)
+        if errors_end:
+            c = (c[:errors_end.end(1)]
+                 + ',\n' + ',\n'.join(new_errors_entries)
+                 + errors_end.group(2)
+                 + c[errors_end.end():])
+
+    if not new_sites_entries and not new_errors_entries:
         print("No new entries to add.")
         return 0
 
-    # ── Append to SITES ──
-    sites_end = re.search(r'(const SITES=\[.*?)(\n\];)', c, re.DOTALL)
-    c = (c[:sites_end.end(1)]
-         + ',\n' + ',\n'.join(added_entries)
-         + sites_end.group(2)
-         + c[sites_end.end():])
-
-    # ── Update MONTHLY per month ──
+    # ── Update MONTHLY ──
     all_months = set(list(added_success.keys()) + list(added_failures.keys()))
     for month_key in all_months:
         dt = datetime.datetime.strptime(month_key, '%Y-%m')
         label = dt.strftime('%b %Y')
-        succ_count = added_success.get(month_key, 0)
-        fail_count = added_failures.get(month_key, 0)
-        fail_evt_count = added_fail_evts.get(month_key, 0)
-        total_count = succ_count + fail_count
+        succ_count      = added_success.get(month_key, 0)
+        fail_count      = added_failures.get(month_key, 0)
+        fail_evt_count  = added_fail_evts.get(month_key, 0)
+        total_count     = succ_count + fail_count
 
         m = re.search(
             r"(\{month:'" + re.escape(label) + r"',total:)(\d+)"
@@ -143,7 +223,6 @@ def update_html(new_installs):
                  + m.group(11)
                  + c[m.end():])
         else:
-            # New month entry
             new_m = (f",\n  {{month:'{label}',total:{total_count},s1:{succ_count},"
                      f"s2:0,s3:0,succ:{succ_count},failEvt:{fail_evt_count},"
                      f"permFail:{fail_count},partial:false,src:'Jenkins'}}")
@@ -154,42 +233,31 @@ def update_html(new_installs):
                      + monthly_end.group(2)
                      + c[monthly_end.end():])
 
-    # ── Update hero month to current ──
+    # ── Update hero month ──
     now = datetime.datetime.utcnow()
     cur_month = now.strftime('%b %Y')
-    c = re.sub(
-        r'(<div class="hero-month">)[^<]+(</div>)',
-        f'\\g<1>{cur_month}\\g<2>', c
-    )
+    c = re.sub(r'(<div class="hero-month">)[^<]+(</div>)',
+               f'\\g<1>{cur_month}\\g<2>', c)
 
-    # ── Update subtitle, stats, last-updated ──
+    # ── Subtitle, stats, last-updated ──
     sites_body = re.search(r'const SITES=\[(.*?)\];', c, re.DOTALL).group(1)
     total = len(re.findall(r"site:'", sites_body))
-
-    c = re.sub(
-        r'<div class="sub">[^<]+</div>',
-        f'<div class="sub">Jenkins &amp; Slack &nbsp;·&nbsp; {cur_month} &nbsp;·&nbsp; {total} installs on record</div>',
-        c
-    )
+    c = re.sub(r'<div class="sub">[^<]+</div>',
+               f'<div class="sub">Jenkins &amp; Slack &nbsp;·&nbsp; {cur_month} &nbsp;·&nbsp; {total} installs on record</div>', c)
     c = re.sub(r'(<div class="stat-num" id="total-sites">)\d+', f'\\g<1>{total}', c)
-
     today_str = now.strftime('%b %d, %Y')
     c = re.sub(r'Last updated: [^<]+', f'Last updated: {today_str}', c)
 
     with open(HTML_PATH, 'w', encoding='utf-8') as f:
         f.write(c)
 
-    success_added = sum(added_success.values())
-    fail_added    = sum(added_failures.values())
-    print(f"Added {len(added_entries)} new SITES entries "
-          f"({success_added} SUCCESS, {fail_added} FAILURE) "
-          f"across months: {list(all_months)}.")
-    return len(added_entries)
+    print(f"Added {len(new_sites_entries)} SITES entries, "
+          f"{len(new_errors_entries)} ERRORS entries.")
+    return len(new_sites_entries)
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    # Load state (tracks last processed Slack message TS)
     if os.path.exists(STATE_PATH):
         with open(STATE_PATH) as f:
             state = json.load(f)
@@ -206,18 +274,14 @@ def main():
         print("Nothing new. Done.")
         return
 
-    # Advance the cursor to the newest message seen
     new_last_ts = max(m['ts'] for m in messages)
-
-    # Parse both SUCCESS and FAILURE installs
     installs = parse_messages(messages)
-    print(f"  {len(installs)} install events parsed (SUCCESS + FAILURE).")
+    print(f"  {len(installs)} install events parsed.")
 
-    # Deduplicate: keep newest event per (pu, site) pair
-    # If a site had FAILURE then SUCCESS, the SUCCESS (newer) wins → correct
+    # Deduplicate: keep newest per (pu, site) — if FAILURE then SUCCESS, SUCCESS wins
     seen = {}
-    for item in sorted(installs, key=lambda x: float(x[4]), reverse=True):
-        key = (item[1], item[0])   # (pu, site)
+    for item in sorted(installs, key=lambda x: float(x['ts']), reverse=True):
+        key = (item['pu'], item['site'])
         if key not in seen:
             seen[key] = item
     unique_installs = list(seen.values())
@@ -225,10 +289,9 @@ def main():
 
     added = update_html(unique_installs)
 
-    # Save state
     state.update({
-        'last_ts':   new_last_ts,
-        'last_run':  datetime.datetime.utcnow().isoformat(),
+        'last_ts':    new_last_ts,
+        'last_run':   datetime.datetime.utcnow().isoformat(),
         'last_added': added,
     })
     with open(STATE_PATH, 'w') as f:
