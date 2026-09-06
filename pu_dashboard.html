@@ -1150,26 +1150,44 @@ function renderErrorChart(){
 function renderErrTable(){
   const tf=document.getElementById('errFilterType').value;
   const cf=document.getElementById('errFilterCat').value;
-  let rows=ERRORS.slice();
+
+  // Build combined list: static ERRORS + dynamic FAILURE entries from SITES
+  const siteFails=SITES.filter(r=>r.runs&&r.runs.includes('FAILURE')).map(r=>{
+    const buildNum=r.url?parseInt(r.url.match(/\/(\d+)\/$/)?.[1]||0):0;
+    const dateM=r.runs.match(/FAILURE\(([^)]+)\)/);
+    return {num:buildNum,site:r.site,date:dateM?dateM[1]:r.date,
+      cat:'real-fail-site',catLabel:'Install FAILURE',type:'real-fail',
+      err:`${r.pu} install failed — <a href="${r.url}" target="_blank" style="color:#843c0c">see Jenkins build #${buildNum} ↗</a>`,
+      _fromSites:true};
+  });
+
+  // Merge, deduplicate by build number (ERRORS takes priority for richer detail)
+  const errNums=new Set(ERRORS.map(e=>e.num));
+  const merged=[...ERRORS, ...siteFails.filter(r=>!errNums.has(r.num))];
+
+  let rows=merged.slice();
   if(tf) rows=rows.filter(r=>r.type===tf);
   if(cf) rows=rows.filter(r=>r.cat===cf);
-  rows.sort((a,b)=>b.num-a.num);
+  // Sort newest first, cap at 50
+  rows.sort((a,b)=>b.date.localeCompare(a.date)||b.num-a.num);
+  rows=rows.slice(0,50);
+
   const tbody=document.getElementById('errBody');
   tbody.innerHTML='';
   if(!rows.length){tbody.innerHTML='<tr><td colspan="6" class="no-data">No results.</td></tr>';}
   else rows.forEach(r=>{
     const tp=r.type==='post-install'?'<span class="pill pill-yellow">post-install</span>':'<span class="pill pill-red">real failure</span>';
-    const cc=ERROR_CATS.find(c=>c.key===r.cat)?.color||'#888';
+    const cc=r._fromSites?'#843c0c':(ERROR_CATS.find(c=>c.key===r.cat)?.color||'#888');
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td><a href="https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/${r.num}" target="_blank" style="color:#2E75B6;text-decoration:none;font-weight:600">#${r.num}</a></td>
+      <td><a href="https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/${r.num}/" target="_blank" style="color:#2E75B6;text-decoration:none;font-weight:600">#${r.num}</a></td>
       <td><strong>${r.site}</strong></td><td>${r.date}</td>
       <td><span style="border-left:3px solid ${cc};padding-left:6px;font-size:11px;font-weight:600">${r.catLabel}</span></td>
       <td>${tp}</td>
       <td style="text-align:left;font-size:11px;color:#555">${r.err}</td>`;
     tbody.appendChild(tr);
   });
-  document.getElementById('errCount').textContent=`${rows.length} build${rows.length!==1?'s':''} shown`;
+  document.getElementById('errCount').textContent=`${rows.length} of ${merged.length} build${merged.length!==1?'s':''} shown (newest 50)`;
 }
 
 // ════════════════════ SITE TABLE ════════════════════
