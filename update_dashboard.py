@@ -293,6 +293,20 @@ def update_html(new_installs):
           f"{len(new_errors_entries)} ERRORS entries.")
     return len(new_sites_entries)
 
+# ── Always update date ────────────────────────────────────────────────────────
+
+def _update_date_only():
+    """Update Last updated date in HTML even when there are no new installs."""
+    with open(HTML_PATH, encoding='utf-8') as f:
+        c = f.read()
+    now = datetime.datetime.utcnow()
+    today_str = now.strftime('%b %d, %Y')
+    c_new = re.sub(r'Last updated: [^<]+', f'Last updated: {today_str}', c)
+    if c_new != c:
+        with open(HTML_PATH, 'w', encoding='utf-8') as f:
+            f.write(c_new)
+        print(f"Date updated to {today_str}.")
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -309,7 +323,8 @@ def main():
     print(f"  {len(messages)} new messages found.")
 
     if not messages:
-        print("Nothing new. Done.")
+        print("Nothing new — updating date only.")
+        _update_date_only()
         return
 
     new_last_ts = max(m['ts'] for m in messages)
