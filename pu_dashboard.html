@@ -258,7 +258,7 @@ tfoot td:first-child{text-align:left;}
           <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.5px;text-transform:uppercase;">Install Dashboard</span>
           <span class="badge">HiperGlobal</span>
         </div>
-        <div class="sub">Jenkins &amp; Slack &nbsp;·&nbsp; Sep 2026 &nbsp;·&nbsp; 437 installs on record</div>
+        <div class="sub">Jenkins &amp; Slack &nbsp;·&nbsp; Sep 2026 &nbsp;·&nbsp; 440 installs on record</div>
       </div>
     </div>
     <div class="hright">
@@ -516,7 +516,7 @@ const MONTHLY=[
   {month:'Jun 2026',total:2,s1:2,s2:0,s3:0,succ:2,failEvt:0,permFail:0,partial:false,src:'Slack',url:'https://uveye.slack.com/archives/C0BCQPBSD4P/p1782898513610469'},
   {month:'Jul 2026',total:3,s1:1,s2:2,s3:0,succ:3,failEvt:1,permFail:0,partial:false,src:'Slack',url:'https://uveye.slack.com/archives/C0A137H7BU7'},
   {month:'Aug 2026',total:308,s1:221,s2:66,s3:20,succ:307,failEvt:81,permFail:1,partial:false,src:'Jenkins'},
-  {month:'Sep 2026',total:49,s1:39,s2:0,s3:0,succ:39,failEvt:10,permFail:10,partial:true,src:'Jenkins'}
+  {month:'Sep 2026',total:52,s1:39,s2:0,s3:0,succ:39,failEvt:13,permFail:13,partial:true,src:'Jenkins'}
 ];
 
 const ERROR_CATS=[
@@ -613,7 +613,10 @@ const ERRORS=[
   {num:3472,site:'1307',date:'2026-09-04',cat:'rancher',catLabel:'Rancher 503',type:'real-fail',err:'rancher.uveye.cloud returned 503 — artelios install aborted'},
   {num:3471,site:'1305',date:'2026-09-04',cat:'rancher',catLabel:'Rancher 503',type:'real-fail',err:'rancher.uveye.cloud returned 503 — artelios install aborted'},
   {num:3434,site:'1277',date:'2026-09-03',cat:'rancher',catLabel:'Rancher 503',type:'real-fail',err:'rancher.uveye.cloud returned 503 — artelios install aborted'},
-  {num:3433,site:'1276',date:'2026-09-03',cat:'rancher',catLabel:'Rancher 503',type:'real-fail',err:'rancher.uveye.cloud returned 503 — artelios install aborted'}
+  {num:3433,site:'1276',date:'2026-09-03',cat:'rancher',catLabel:'Rancher 503',type:'real-fail',err:'rancher.uveye.cloud returned 503 — artelios install aborted'},
+  {num:3533,site:'1334',date:'2026-09-09',cat:'other',catLabel:'Unknown Error',type:'real-fail',err:'ERROR: script returned exit code 1'},
+  {num:3532,site:'1332',date:'2026-09-09',cat:'other',catLabel:'Unknown Error',type:'real-fail',err:'ERROR: script returned exit code 1'},
+  {num:3534,site:'1335',date:'2026-09-09',cat:'other',catLabel:'Unknown Error',type:'real-fail',err:'Finished: FAILURE'}
 ];
 
 const SITES=[
@@ -1053,7 +1056,10 @@ const SITES=[
   {site:'1315',pu:'artelios',att:1,attLabel:'1st',date:'2026-09-08',src:'Jenkins',runs:'SUCCESS(2026-09-08)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3510/'},
   {site:'1316',pu:'artelios',att:1,attLabel:'1st',date:'2026-09-08',src:'Jenkins',runs:'SUCCESS(2026-09-08)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3509/'},
   {site:'1303',pu:'artelios',att:1,attLabel:'1st',date:'2026-09-08',src:'Jenkins',runs:'SUCCESS(2026-09-08)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3499/'},
-  {site:'1302',pu:'artelios',att:1,attLabel:'1st',date:'2026-09-08',src:'Jenkins',runs:'SUCCESS(2026-09-08)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3500/'}
+  {site:'1302',pu:'artelios',att:1,attLabel:'1st',date:'2026-09-08',src:'Jenkins',runs:'SUCCESS(2026-09-08)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3500/'},
+  {site:'1334',pu:'artelios',att:1,attLabel:'1st',date:'2026-09-09',src:'Jenkins',runs:'FAILURE(2026-09-09)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3533/'},
+  {site:'1332',pu:'artelios',att:1,attLabel:'1st',date:'2026-09-09',src:'Jenkins',runs:'FAILURE(2026-09-09)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3532/'},
+  {site:'1335',pu:'artelios',att:1,attLabel:'1st',date:'2026-09-09',src:'Jenkins',runs:'FAILURE(2026-09-09)',url:'https://ci.cloud.uveye.xyz/job/versions_management/job/dealership/job/install_dealership_site/3534/'}
 ];
 
 // ════════════════════ HERO + TREND ════════════════════
