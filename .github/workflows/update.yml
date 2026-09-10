@@ -30,13 +30,14 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install -r requirements.txt
 
       - name: Run updater
         env:
-          SLACK_TOKEN:   ${{ secrets.SLACK_TOKEN }}
-          JENKINS_USER:  ${{ secrets.JENKINS_USER }}
-          JENKINS_TOKEN: ${{ secrets.JENKINS_TOKEN }}
+          SLACK_TOKEN:        ${{ secrets.SLACK_TOKEN }}
+          DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
+          JENKINS_USER:       ${{ secrets.JENKINS_USER }}
+          JENKINS_TOKEN:      ${{ secrets.JENKINS_TOKEN }}
         run: python update_dashboard.py
 
       - name: Commit & push changes
@@ -63,6 +64,7 @@ jobs:
         env:
           PASS_HASH: ${{ secrets.PASS_HASH }}
         run: sed -i "s|__PASS_HASH__|${PASS_HASH}|g" pu_dashboard.html
+        # Note: data is AES-256 encrypted regardless — hash is just the UI gate
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
